@@ -26,6 +26,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+button,.screen,canvas,.dpad{touch-action:manipulation}
 html,body{height:100%}
 body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -74,7 +75,7 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .stats{display:flex;gap:12px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
 .stats b{color:var(--ink);font-size:15px;display:block;text-align:center}
 #wrap{position:relative;width:100%;max-width:520px;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
-canvas{display:block;max-width:100%;border-radius:14px;box-shadow:0 10px 28px rgba(33,58,42,.22);touch-action:none;background:var(--sky-deep)}
+canvas{display:block;max-width:100%;touch-action:none;border-radius:14px;box-shadow:0 10px 28px rgba(33,58,42,.22);touch-action:none;background:var(--sky-deep)}
 #msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 #msg .card{max-width:290px;text-align:center}
 #msg h2{font-size:28px;color:var(--apple-dark);margin-bottom:6px}
@@ -305,7 +306,9 @@ function draw(p=1){const W=lv.W,H=lv.H;
 function fit(){const wrap=$('wrap');if(!lv)return;const w=Math.min(wrap.clientWidth,Math.max(120,wrap.clientHeight)*lv.W/lv.H);cv.style.width=w+'px';}
 addEventListener('resize',fit);
 // input
-document.querySelectorAll('.dpad button').forEach(b=>b.addEventListener('click',()=>move(b.dataset.d)));
+document.querySelectorAll('.dpad button').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();move(b.dataset.d);});b.addEventListener('click',e=>e.preventDefault());});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
 addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')return;const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R'}[e.key];
   if(m){e.preventDefault();move(m);}else if(e.key==='z'||e.key==='Z')undo();else if(e.key==='r'||e.key==='R')startLevel(li);});
 let sx=0,sy=0,sw=false;cv.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;sw=true;});
