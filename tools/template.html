@@ -191,7 +191,7 @@ function lbSyncAll(){for(const p of S.players)for(const [l,m] of Object.entries(
 let LB_CACHE=null,LB_AT=0;
 async function lbFetch(force){if(!force&&LB_CACHE&&Date.now()-LB_AT<20000)return LB_CACHE;
   const r=await fetch(LB_URL+'?select=device_id,pid,player,face,level,moves,updated_at&limit=5000',{headers:LB_H});
-  if(!r.ok)throw new Error(r.status);LB_CACHE=(await r.json()).filter(x=>x.level<5||x.updated_at>=LEVELS_V2);LB_AT=Date.now();return LB_CACHE;}
+  if(!r.ok)throw new Error(r.status);LB_CACHE=(await r.json()).filter(x=>!x.pid.startsWith('pub-')&&(x.level<5||x.updated_at>=LEVELS_V2));LB_AT=Date.now();return LB_CACHE;}
 function lbOverall(rows){const mine=deviceId(),byP={};
   for(const r of rows){const k=r.device_id+'|'+r.pid;const o=byP[k]||(byP[k]={name:r.player,face:r.face,at:'',mine:r.device_id===mine,best:{}});
     if(r.updated_at>o.at){o.at=r.updated_at;o.name=r.player;o.face=r.face;}
