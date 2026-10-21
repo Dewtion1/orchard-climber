@@ -173,6 +173,8 @@ const SITE='orchard-climber.vercel.app';
 const KEY='orchard.v1';
 let S={players:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw);}catch(e){}
+const LEVELS_V2='2026-10-21T11:40:00Z'; // levels 6-50 were replaced; older scores for them don't count
+if(!S.v2){for(const p of S.players)for(const k of Object.keys(p.best||{}))if(+k>=5)delete p.best[k];S.v2=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const cur=()=>S.players.find(p=>p.id===S.current)||null;
 function deviceId(){try{let d=localStorage.getItem('orchard.device');if(!d){d='d'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('orchard.device',d);}return d;}catch(e){return 'danon';}}
@@ -189,7 +191,7 @@ function lbSyncAll(){for(const p of S.players)for(const [l,m] of Object.entries(
 let LB_CACHE=null,LB_AT=0;
 async function lbFetch(force){if(!force&&LB_CACHE&&Date.now()-LB_AT<20000)return LB_CACHE;
   const r=await fetch(LB_URL+'?select=device_id,pid,player,face,level,moves,updated_at&limit=5000',{headers:LB_H});
-  if(!r.ok)throw new Error(r.status);LB_CACHE=await r.json();LB_AT=Date.now();return LB_CACHE;}
+  if(!r.ok)throw new Error(r.status);LB_CACHE=(await r.json()).filter(x=>x.level<5||x.updated_at>=LEVELS_V2);LB_AT=Date.now();return LB_CACHE;}
 function lbOverall(rows){const mine=deviceId(),byP={};
   for(const r of rows){const k=r.device_id+'|'+r.pid;const o=byP[k]||(byP[k]={name:r.player,face:r.face,at:'',mine:r.device_id===mine,best:{}});
     if(r.updated_at>o.at){o.at=r.updated_at;o.name=r.player;o.face=r.face;}
@@ -238,7 +240,7 @@ $('backHome2').onclick=()=>{show(boardFrom);if(boardFrom==='levels')renderLevels
 function unlockedUpTo(p){let n=0;while(n<LEVELS.length&&p.best&&p.best[n]!=null)n++;return n;} // index of first uncleared
 function renderLevels(){const p=cur();if(!p)return;const g=$('lvGrid');g.innerHTML='';
   $('lvPlayer').innerHTML=`<small>Playing as</small>${esc(p.name)}`;
-  const open=unlockedUpTo(p);
+  const open=/^andrew$/i.test(p.name.trim())?LEVELS.length:unlockedUpTo(p);
   LEVELS.forEach((L,i)=>{const b=document.createElement('button');const best=p.best&&p.best[i];
     b.className='lv'+(best!=null?(best<=L.par?' star':' done'):'');b.disabled=i>open;
     b.innerHTML=`${i+1}<small>${best!=null?best+' mv':(i>open?'🔒':'par '+L.par)}</small>`;b.onclick=()=>startLevel(i);g.appendChild(b);});}
