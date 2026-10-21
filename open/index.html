@@ -26,7 +26,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-button,.screen,canvas,.pad{touch-action:manipulation}
+button,.screen,canvas{touch-action:manipulation}
 html,body{height:100%}
 body{margin:0;background:var(--sky);color:var(--ink);font-family:var(--body);font-weight:600;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -68,7 +68,10 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .lv.star{background:var(--gold);border-color:#b7811a;color:#3b2a08}
 .lv:disabled{opacity:.4}
 /* game */
-#game{gap:6px;overflow:hidden}
+#game{gap:6px;overflow:hidden;touch-action:none;padding-left:0;padding-right:0}
+#game .top,#game .tools{padding:0 max(16px,env(safe-area-inset-left,0px))}
+#game #wrap{max-width:none}
+#game canvas{border-radius:0;box-shadow:none}
 .top{width:100%;max-width:520px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .top .name{font-family:var(--display);font-size:20px;color:var(--leaf-dark);min-width:0;overflow:hidden;text-overflow:ellipsis;line-height:1.05}
 .top .name small{font-family:var(--body);font-size:12px;color:var(--ink-soft);font-weight:800;display:block;letter-spacing:.04em;text-transform:uppercase}
@@ -82,14 +85,11 @@ canvas{display:block;max-width:100%;touch-action:none;border-radius:14px;box-sha
 #msg p{margin:0 0 12px;color:var(--ink-soft);font-size:14px}
 .tools{width:100%;max-width:520px;display:flex;gap:8px;justify-content:center}
 .tools button{font-size:13px;padding:8px 10px}
-.pad{width:100%;max-width:520px;flex:0 0 min(38vh,340px);display:grid;grid-template-columns:1fr 1.15fr 1fr;grid-template-rows:1.4fr 1fr;gap:6px;touch-action:none}
-.zone{border-radius:14px;background:rgba(47,125,58,.14);border:2px dashed rgba(47,125,58,.35);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--leaf-dark);user-select:none;-webkit-user-select:none}
-.zone[data-d="L"]{grid-column:1;grid-row:1/3}
-.zone[data-d="R"]{grid-column:3;grid-row:1/3}
-.zone[data-d="U"]{grid-column:2;grid-row:1}
-.zone[data-d="D"]{grid-column:2;grid-row:2}
-.zone.hit{background:rgba(47,125,58,.38);border-style:solid}
-@media (prefers-reduced-motion:reduce){.zone{transition:none}}
+.pad-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5}
+.pad-hint div{background:rgba(33,58,42,.88);color:#fff;border-radius:14px;padding:14px 18px;font-size:14px;text-align:center;line-height:1.5}
+.tapfx{position:fixed;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(47,125,58,.25);display:grid;place-items:center;font-size:26px;color:var(--leaf-dark);pointer-events:none;z-index:4;animation:tap .35s ease-out forwards}
+@keyframes tap{from{transform:scale(.6);opacity:1}to{transform:scale(1.4);opacity:0}}
+@media (prefers-reduced-motion:reduce){.tapfx{display:none}}
 /* leaderboard */
 .tabs{display:flex;gap:6px;width:100%;max-width:520px}
 .tabs button{flex:1;padding:9px 6px;font-size:13px}
@@ -142,16 +142,12 @@ select{font-family:var(--body);font-weight:700;font-size:14px;padding:8px;border
     <div class="name" id="gName"><small>Level 1</small>First Bites</div>
     <div class="stats"><span>Moves<b id="moves">0</b></span><span>Par<b id="par">0</b></span><span>Length<b id="len">2</b></span></div>
   </div>
+  <div class="tools"><button class="soft" id="undo">↶ Undo</button><button class="soft" id="reset">Restart</button><button class="soft" id="hintBtn">Hint</button><button class="soft" id="skipBtn" hidden>Skip ▶</button></div>
   <div id="wrap">
     <canvas id="c" width="560" height="480" aria-label="Game board"></canvas>
+    <div class="pad-hint" id="padHint" hidden><div><b>Tap to move</b><br>Left side ◀ &nbsp; Right side ▶<br>Middle ▲ &nbsp; Bottom middle ▼</div></div>
     <div id="msg" hidden><div class="card"><h2 id="mt"></h2><p id="mp"></p><div class="row"><button id="mb"></button><button class="soft" id="mb2" hidden>Replay</button></div></div></div>
   </div>
-  <div class="tools"><button class="soft" id="undo">↶ Undo</button><button class="soft" id="reset">Restart</button><button class="soft" id="hintBtn">Hint</button><button class="soft" id="skipBtn" hidden>Skip ▶</button></div>
-  <div class="pad" id="pad" aria-label="Tap to move">
-    <div class="zone" data-d="L"><span>◀</span></div>
-    <div class="zone" data-d="U"><span>▲</span></div>
-    <div class="zone" data-d="R"><span>▶</span></div>
-    <div class="zone" data-d="D"><span>▼</span></div>
   </div>
 </section>
 
@@ -272,7 +268,7 @@ const DIRS={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
 function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);snake=lv.snake;apples=lv.apples;hist=[];moves=0;pen=0;dead=false;anim=null;facing=[1,0];
   cv.width=lv.W*CELL;cv.height=lv.H*CELL;$('gName').innerHTML=`<small>Level ${i+1} of ${LEVELS.length}</small>${esc(L.name)}`;$('par').textContent=L.par;
   const p=cur();$('skipBtn').hidden=!(p&&p.best&&p.best[i]!=null&&i<LEVELS.length-1);
-  $('msg').hidden=true;show('game');refreshStats();fit();draw();}
+  $('msg').hidden=true;show('game');refreshStats();fit();draw();try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
 function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=snake.length;}
 function move(d){if(dead||anim||!$('msg').hidden)return;const [dx,dy]=DIRS[d];const r=stepState(lv,snake,apples,dx,dy);
   if(!r){bumpT=1;draw();return;}
@@ -311,13 +307,15 @@ function draw(p=1){const W=lv.W,H=lv.H;
 function fit(){const wrap=$('wrap');if(!lv)return;const w=Math.min(wrap.clientWidth,Math.max(120,wrap.clientHeight)*lv.W/lv.H);cv.style.width=w+'px';}
 addEventListener('resize',fit);
 // input
-document.querySelectorAll('.zone').forEach(z=>{z.addEventListener('pointerdown',e=>{e.preventDefault();z.classList.add('hit');setTimeout(()=>z.classList.remove('hit'),120);move(z.dataset.d);});});
+$('game').addEventListener('pointerdown',e=>{if(e.target.closest('button,#msg,.top,.tools'))return;e.preventDefault();
+  const r=$('game').getBoundingClientRect(),x=(e.clientX-r.left)/r.width,yb=(r.bottom-e.clientY)/r.height;
+  const d=x<1/3?'L':x>2/3?'R':(yb<0.16?'D':'U');
+  const fx=document.createElement('div');fx.className='tapfx';fx.textContent={L:'◀',R:'▶',U:'▲',D:'▼'}[d];fx.style.left=e.clientX+'px';fx.style.top=e.clientY+'px';document.body.appendChild(fx);setTimeout(()=>fx.remove(),400);
+  $('padHint').hidden=true;move(d);});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')return;const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R'}[e.key];
   if(m){e.preventDefault();move(m);}else if(e.key==='z'||e.key==='Z')undo();else if(e.key==='r'||e.key==='R')startLevel(li);});
-let sx=0,sy=0,sw=false;cv.addEventListener('pointerdown',e=>{sx=e.clientX;sy=e.clientY;sw=true;});
-cv.addEventListener('pointerup',e=>{if(!sw)return;sw=false;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.hypot(dx,dy)<18)return;move(Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U'));});
 $('undo').onclick=undo;$('reset').onclick=()=>startLevel(li);$('backLv').onclick=()=>{renderLevels();show('levels');};
 $('skipBtn').onclick=()=>startLevel(li+1);
 $('hintBtn').onclick=()=>{if(dead||!$('msg').hidden)return;const h=hintMove(lv,snake,apples);if(!h){toast('No way out from here. Undo a few moves.');return;}
