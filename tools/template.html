@@ -68,7 +68,7 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .lv.star{background:var(--gold);border-color:#b7811a;color:#3b2a08}
 .lv:disabled{opacity:.4}
 /* game */
-#game{gap:6px;overflow:hidden;touch-action:none;padding-left:0;padding-right:0}
+#game{gap:6px;overflow:hidden;touch-action:none;overscroll-behavior:none;padding-left:0;padding-right:0}
 #game .top,#game .tools{padding:0 max(16px,env(safe-area-inset-left,0px))}
 #game #wrap{max-width:none}
 #game canvas{border-radius:0;box-shadow:none}
@@ -145,7 +145,7 @@ select{font-family:var(--body);font-weight:700;font-size:14px;padding:8px;border
   <div class="tools"><button class="soft" id="undo">↶ Undo</button><button class="soft" id="reset">Restart</button><button class="soft" id="hintBtn">Hint</button><button class="soft" id="skipBtn" hidden>Skip ▶</button></div>
   <div id="wrap">
     <canvas id="c" width="560" height="480" aria-label="Game board"></canvas>
-    <div class="pad-hint" id="padHint" hidden><div><b>Tap to move</b><br>Left side ◀ &nbsp; Right side ▶<br>Middle ▲ &nbsp; Bottom middle ▼</div></div>
+    <div class="pad-hint" id="padHint" hidden><div><b>Swipe to move</b><br>Swipe anywhere on the screen,<br>in the direction you want to go.</div></div>
     <div id="msg" hidden><div class="card"><h2 id="mt"></h2><p id="mp"></p><div class="row"><button id="mb"></button><button class="soft" id="mb2" hidden>Replay</button></div></div></div>
   </div>
   </div>
@@ -333,11 +333,16 @@ function draw(p=1){const W=lv.W,H=lv.H,now=performance.now();
 function fit(){const wrap=$('wrap');if(!lv)return;const w=Math.min(wrap.clientWidth,Math.max(120,wrap.clientHeight)*lv.W/lv.H);cv.style.width=w+'px';}
 addEventListener('resize',fit);
 // input
-$('game').addEventListener('pointerdown',e=>{if(e.target.closest('button,#msg,.top,.tools'))return;e.preventDefault();
-  const r=$('game').getBoundingClientRect(),x=(e.clientX-r.left)/r.width,yb=(r.bottom-e.clientY)/r.height;
-  const d=x<1/3?'L':x>2/3?'R':(yb<0.16?'D':'U');
-  const fx=document.createElement('div');fx.className='tapfx';fx.textContent={L:'◀',R:'▶',U:'▲',D:'▼'}[d];fx.style.left=e.clientX+'px';fx.style.top=e.clientY+'px';document.body.appendChild(fx);setTimeout(()=>fx.remove(),400);
-  $('padHint').hidden=true;move(d);});
+// swipe anywhere on the game screen: one swipe = one move
+let sw=null;
+function tapfx(d,x,y){const fx=document.createElement('div');fx.className='tapfx';fx.textContent={L:'◀',R:'▶',U:'▲',D:'▼'}[d];fx.style.left=x+'px';fx.style.top=y+'px';document.body.appendChild(fx);setTimeout(()=>fx.remove(),400);}
+$('game').addEventListener('pointerdown',e=>{if(e.target.closest('button,#msg,.top,.tools'))return;e.preventDefault();sw={x:e.clientX,y:e.clientY,id:e.pointerId};});
+$('game').addEventListener('pointermove',e=>{if(!sw||e.pointerId!==sw.id)return;const dx=e.clientX-sw.x,dy=e.clientY-sw.y;const T=28;
+  if(Math.abs(dx)<T&&Math.abs(dy)<T)return;
+  const d=Math.abs(dx)>Math.abs(dy)?(dx>0?'R':'L'):(dy>0?'D':'U');
+  sw=null;$('padHint').hidden=true;tapfx(d,e.clientX,e.clientY);move(d);});
+const endSwipe=e=>{if(sw&&e.pointerId===sw.id)sw=null;};
+$('game').addEventListener('pointerup',endSwipe);$('game').addEventListener('pointercancel',endSwipe);
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')return;const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R'}[e.key];
