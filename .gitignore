@@ -6,3 +6,4 @@ tools/faces.js
 tools/review.json
 tools/review-*.err
 tools/levels-old.json
+tools/review-*.out
