@@ -265,7 +265,7 @@ const MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; cleari
 const KEY='orchard.v1';
 let S={players:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw);}catch(e){}
-const LEVELS_V3='2026-10-23T12:00:00Z',LEVELS_V4='2026-10-23T13:00:00Z',LEVELS_V5='2026-10-23T17:00:00Z',LEVELS_V6='2026-10-23T18:45:00Z';
+const LEVELS_V3='2026-10-23T12:00:00Z',LEVELS_V4='2026-10-23T13:00:00Z',LEVELS_V5='2026-10-23T17:00:00Z',LEVELS_V6='2026-10-23T18:16:00Z';
 // v3: 19 original levels dropped. v4: old 20-50 became 1-31. v5: the set was reworked and reordered (LEVEL_MAPS.v5: v4 index -> v5 index for the survivors).
 // v6: the set grew to 150 and was re-sorted (LEVEL_MAPS.v6: v5 index -> v6 index; every v5 level survived).
 function remapRow(x){if(x.updated_at>=LEVELS_V6)return x;let l=x.level;
