@@ -7,7 +7,7 @@ A gravity snake puzzle for the family. Eat apples to grow; the longer you are, t
 - Deploys as a static site on Vercel; pushes to `main` go live.
 
 ## Rules
-Move one cell at a time. From level 20: push **crates** and stand on them; **bombs** explode when they land after a fall, blowing out the rock beneath (stay out of the way); **spikes** kill on contact; when a level has a **door**, eat every apple and then reach it.
+Move one cell at a time. Mechanics: push **crates** and stand on them; **bombs** explode when they land after a fall, blowing out the rock beneath (stay out of the way); **spikes** kill on contact; when a level has a **door**, eat every apple and then reach it.
 Move one cell at a time. After every move, if no part of the snake is resting on a platform, the whole snake falls. Eating an apple adds a segment. Clear a level by eating every apple. Falling off the bottom restarts the level (Undo also works). Hint costs 3 moves.
 
 Par is the shortest solution found by the solver. Matching or beating par earns gold on the level grid and counts on the leaderboard (ranked by levels cleared, then levels under par, then total moves).
