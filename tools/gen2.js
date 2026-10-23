@@ -5,11 +5,14 @@
 // Acceptance (both modes): solvable; unsolvable with every crate/bomb stripped (so an object is necessary);
 //   if crates are present the shortest solution pushes at least twice; if a bomb is present it explodes.
 const {parseLevel,stepState,stateKey,solve,DIRS}=require('./rules.js');
-const W=14,H=12;
+// board size: 14x12 by default; GRID=WxH in the environment makes bigger boards (geometry counts scale with the area)
+let W=14,H=12;if(process.env.GRID){const m=/^(\d+)x(\d+)$/.exec(process.env.GRID);if(m){W=+m[1];H=+m[2];}}
+const AREA=(W*H)/(14*12),TALL=H/12,BIG=AREA>1;
 let seed=+process.argv[2]||7;const POOL=+process.argv[3]||30;
 const MODE=(process.argv[4]||'main').toLowerCase();const BRIDGE=MODE==='bridge';
 const DEAD_FLOOR=process.argv[5]!=null?+process.argv[5]:(BRIDGE?0:0.08);
-const [MIN_SOL,MAX_SOL]=BRIDGE?[18,38]:[30,170];
+const [MIN_SOL,MAX_SOL]=BRIDGE?[18,38]:[30,Math.round(170*Math.sqrt(AREA))];
+const CAP_SOLVE=BIG?Math.round(90000*AREA):90000,CAP_AN=BIG?Math.round(260000*AREA):260000;
 function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
 const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
 
@@ -46,10 +49,10 @@ function gen(diff,opts){opts=opts||{};const one=opts.objects==='one';
   const g=blank();
   const sx=ri(1,W-3),dir=rnd()<.5?1:-1;g[H-2][sx]='S';g[H-2][sx-dir]='o';
   const nearStart=x=>Math.abs(x-sx)<=1||Math.abs(x-(sx-dir))<=1;
-  const nPits=rnd()<.3+diff*.5?ri(1,1+Math.round(diff)):0;
+  const nPits=rnd()<.3+diff*.5?ri(1,1+Math.round(diff*W/14)):0;
   for(let p=0;p<nPits;p++){const px=ri(1,W-3),pw=rnd()<.5?2:1;for(let i=0;i<pw;i++){const x=px+i;if(x<W-1&&!nearStart(x))g[H-1][x]='.';}}
   const fa=ri(1,2);for(let i=0;i<fa;i++){const x=ri(1,W-2);if(g[H-2][x]==='.'&&g[H-1][x]==='#')g[H-2][x]='A';}
-  const nShelf=ri(3,4+Math.round(diff*2));let row=H-1-ri(2,3);const shelves=[];
+  const nShelf=Math.round(ri(3,4+Math.round(diff*2))*TALL);let row=H-1-ri(2,3);const shelves=[];
   for(let s=0;s<nShelf&&row>=1;s++){
     const len=ri(2,7),x0=ri(0,W-len);for(let x=x0;x<x0+len;x++)g[row][x]='#';shelves.push({row,x0,len});
     const ax=ri(x0,x0+len-1);if(row-1>=0&&g[row-1][ax]==='.')g[row-1][ax]='A';
@@ -59,9 +62,9 @@ function gen(diff,opts){opts=opts||{};const one=opts.objects==='one';
     if(rnd()<.2+diff*.4){const fx=ri(0,W-1),fy=ri(Math.max(0,row-3),row-1);if(fy>=0&&g[fy][fx]==='.')g[fy][fx]='A';}
     row-=ri(2,3+Math.round(diff));
   }
-  const nStubs=ri(1,2+Math.round(diff*2));
+  const nStubs=Math.round(ri(1,2+Math.round(diff*2))*AREA);
   for(let t=0;t<nStubs;t++){const wx=ri(1,W-2),wh=ri(2,5),base=ri(0,1)?H-1:ri(4,H-3);for(let k=1;k<=wh;k++){const y=base-k;if(y>=0&&g[y][wx]==='.'&&!(y===H-2&&nearStart(wx)))g[y][wx]='#';}}
-  const nScatter=ri(2,3+Math.round(diff*5));
+  const nScatter=Math.round(ri(2,3+Math.round(diff*5))*AREA);
   for(let t=0;t<nScatter;t++){const x=ri(0,W-1),y=ri(1,H-3);if(g[y][x]==='.'&&!(y===H-2&&nearStart(x)))g[y][x]='#';}
   if(rnd()<diff*.6){const wx=ri(3,W-4),door=ri(2,H-3);for(let y=1;y<H-1;y++)if(y!==door&&y!==door-1&&g[y][wx]==='.'&&!(y===H-2&&nearStart(wx)))g[y][wx]='#';}
   // --- v2 features ---
@@ -79,7 +82,7 @@ function gen(diff,opts){opts=opts||{};const one=opts.objects==='one';
     else if(!placeBomb())return null;
   }else{
     // crates 1-2
-    const nC=ri(1,1+Math.round(diff));for(let i=0;i<nC;i++){const c=pick();if(c&&free(c))g[c[1]][c[0]]='C';}
+    const nC=ri(1,1+Math.round(diff)+(BIG?1:0));for(let i=0;i<nC;i++){const c=pick();if(c&&free(c))g[c[1]][c[0]]='C';}
     // bomb: on a shelf top near its edge
     if(rnd()<.35+diff*.4)placeBomb();
   }
@@ -87,7 +90,7 @@ function gen(diff,opts){opts=opts||{};const one=opts.objects==='one';
   const nSp=ri(0,1+Math.round(diff*2));for(let i=0;i<nSp;i++){const t=pick();if(!t)continue;const run=ri(1,3);for(let k=0;k<run;k++){const x=t[0]+k,y=t[1];if(x<W&&g[y][x]==='.'&&g[y+1]&&g[y+1][x]==='#'&&!(y===H-2&&nearStart(x)))g[y][x]='X';}}
   const rows=g.map(r=>r.join(''));
   const txt=rows.join('');const na=txt.split('A').length-1;
-  const [minA,maxA]=one?[3,6]:[4,8];
+  const [minA,maxA]=one?[3,6]:[4,BIG?Math.min(12,Math.round(8*AREA)):8];
   if(na<minA||na>maxA||!rows[H-2].includes('S')||!txt.includes('E'))return null;
   if(one&&(txt.match(/[CB]/g)||[]).length!==1)return null;
   return rows;
@@ -102,19 +105,19 @@ while(pool.length<POOL&&tries<MAX_TRIES){tries++;
   const k=rows.join('');if(seen.has(k))continue;seen.add(k);
   if(!/[CB]/.test(k))continue;
   // cheap gate first: solvable within a small cap, and NOT solvable with crates/bombs stripped
-  const q=solve(parseLevel({rows}),90000);if(!q||q.path.length<MIN_SOL||q.path.length>MAX_SOL){rej.gate++;continue;}
-  if(solve(parseLevel({rows:rows.map(r=>r.replace(/[CB]/g,'.'))}),90000)){rej.stripped++;continue;}
+  const q=solve(parseLevel({rows}),CAP_SOLVE);if(!q||q.path.length<MIN_SOL||q.path.length>MAX_SOL){rej.gate++;continue;}
+  if(solve(parseLevel({rows:rows.map(r=>r.replace(/[CB]/g,'.'))}),CAP_SOLVE)){rej.stripped++;continue;}
   // the objects must be used in the shortest solution: crates pushed at least twice, a bomb exploded
   const crates=(k.match(/C/g)||[]).length,bombs=(k.match(/B/g)||[]).length;
   const rp=replay(rows,q.path);if(!rp)continue;
   if(crates&&rp.pushes<2){rej.pushes++;continue;}
   if(bombs&&rp.booms<1){rej.booms++;continue;}
-  const a=analyse(rows,260000);if(!a){rej.analyse++;continue;}
+  const a=analyse(rows,CAP_AN);if(!a){rej.analyse++;continue;}
   if(a.deadRatio<DEAD_FLOOR){rej.dead++;continue;}
-  pool.push({rows,...a,crates,bombs,spikes:(k.match(/X/g)||[]).length,pushes:rp.pushes,booms:rp.booms,falls:rp.falls,maxLen:rp.maxLen,mode:MODE});
+  pool.push({rows,W,H,...a,crates,bombs,spikes:(k.match(/X/g)||[]).length,pushes:rp.pushes,booms:rp.booms,falls:rp.falls,maxLen:rp.maxLen,mode:MODE});
   process.stderr.write(`pool ${pool.length} (tries ${tries}) sol ${a.sol} dead ${(a.deadRatio*100).toFixed(0)}% pushes ${rp.pushes} booms ${rp.booms}\n`);
-  require('fs').writeFileSync(`pool2-${process.argv[2]||'0'}.json`,JSON.stringify(pool));
+  require('fs').writeFileSync(`pool2-${process.env.GRID?process.env.GRID+'-':''}${process.argv[2]||'0'}.json`,JSON.stringify(pool));
 }
-require('fs').writeFileSync(`pool2-${process.argv[2]||'0'}.json`,JSON.stringify(pool));
+require('fs').writeFileSync(`pool2-${process.env.GRID?process.env.GRID+'-':''}${process.argv[2]||'0'}.json`,JSON.stringify(pool));
 console.log('tries',tries,'pool',pool.length,'mode',MODE,'deadFloor',DEAD_FLOOR,'rejected',JSON.stringify(rej));
 }

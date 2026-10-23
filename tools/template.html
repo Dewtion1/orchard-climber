@@ -205,6 +205,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
   <div class="stack">
     <button class="go" id="playBtn" disabled style="min-height:84px;border-radius:24px;font-size:36px;flex-direction:column;gap:2px">Play<small id="playSub">Add a player to start</small></button>
     <button class="cream" id="lbBtn" style="min-height:60px;border-radius:20px;font-family:var(--display);font-weight:400;font-size:22px;gap:10px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b07a10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span>Family Board</span></button>
+    <button class="cream" id="bigBtn" hidden style="min-height:48px">Big boards (test map)</button>
   </div>
 </section>
 
@@ -212,7 +213,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
 <section class="screen" id="levels" hidden>
   <div id="lvHead">
     <button class="round cream" id="backHome" aria-label="Back to home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#213a2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <div class="mid"><b>The Orchard</b><small id="lvSummary"></small></div>
+    <div class="mid"><b id="lvTitle">The Orchard</b><small id="lvSummary"></small></div>
     <button class="chip" id="lbBtn2" aria-label="Gold apples and the board" style="border:0;cursor:pointer"><svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#e3a51f"/><path d="M20 15c-2-2-7-2-8 2-1 5 1 10 5 11 1 0 2-1 3-1s2 1 3 1c4-1 6-6 5-11-1-4-6-4-8-2z" fill="#a8770f"/></svg><span id="goldCount">0</span></button>
   </div>
   <div id="path"></div>
@@ -255,11 +256,14 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
 'use strict';
 /*FACES*/
 const FACE_NAMES=['','','','','','','Iain'];
-const LEVELS=/*LEVELS*/[];
+const LEVELS_MAIN=/*LEVELS*/[],LEVELS_BIG=/*LEVELSBIG*/[]; // LEVELS_BIG: the separate test map of bigger boards
+let LEVELS=LEVELS_MAIN,MAPID='main';
 const LEVEL_MAPS=/*LEVELMAPS*/{v5:{},v6:{}};
 const PUB=false;
 const SITE='orchard-climber.vercel.app';
-const MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; clearing the last of them is the finale
+let MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; clearing the last of them is the finale
+const bestOf=p=>MAPID==='main'?(p.best||(p.best={})):(p.bestBig||(p.bestBig={})); // progress per map; only the main map reaches the leaderboard
+function setMap(id){MAPID=id;LEVELS=id==='big'?LEVELS_BIG:LEVELS_MAIN;MAIN=LEVELS.filter(l=>!l.bonus).length;$('lvTitle').textContent=id==='big'?'Big boards':'The Orchard';$('toStart').lastChild.textContent=id==='big'?'Start':'Tutorials';}
 
 // ---------- persistence ----------
 const KEY='orchard.v1';
@@ -280,8 +284,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const cur=()=>S.players.find(p=>p.id===S.current)||null;
 function deviceId(){try{let d=localStorage.getItem('orchard.device');if(!d){d='d'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('orchard.device',d);}return d;}catch(e){return 'danon';}}
 const tier=(best,par)=>best<=par?'gold':best<=par+5?'close':'done'; // three-tier rating
-const goldCount=p=>LEVELS.reduce((n,L,i)=>n+(p.best&&p.best[i]!=null&&p.best[i]<=L.par?1:0),0);
-const clearedCount=p=>LEVELS.reduce((n,L,i)=>n+(!L.bonus&&p.best&&p.best[i]!=null?1:0),0);
+const goldCount=p=>LEVELS.reduce((n,L,i)=>n+(bestOf(p)[i]!=null&&bestOf(p)[i]<=L.par?1:0),0);
+const clearedCount=p=>LEVELS.reduce((n,L,i)=>n+(!L.bonus&&bestOf(p)[i]!=null?1:0),0);
 
 // ---------- shared family leaderboard (Supabase REST, same project as the other games) ----------
 const LB_URL='https://zmxkxxlvaewwwqgrphlk.supabase.co/rest/v1/orchard_climber_scores';
@@ -295,12 +299,12 @@ function lbSyncAll(){for(const p of S.players)for(const [l,m] of Object.entries(
 let LB_CACHE=null,LB_AT=0;
 async function lbFetch(force){if(!force&&LB_CACHE&&Date.now()-LB_AT<20000)return LB_CACHE;
   const r=await fetch(LB_URL+'?select=device_id,pid,player,face,level,moves,updated_at&limit=5000',{headers:LB_H});
-  if(!r.ok)throw new Error(r.status);const best={};for(const x of (await r.json()).map(remapRow)){if(!x||x.pid.startsWith('pub-')!==PUB||x.level>=LEVELS.length)continue;const k=x.device_id+'|'+x.pid+'|'+x.level;if(!best[k]||x.moves<best[k].moves)best[k]=x;}LB_CACHE=Object.values(best);LB_AT=Date.now();return LB_CACHE;}
+  if(!r.ok)throw new Error(r.status);const best={};for(const x of (await r.json()).map(remapRow)){if(!x||x.pid.startsWith('pub-')!==PUB||x.level>=LEVELS_MAIN.length)continue;const k=x.device_id+'|'+x.pid+'|'+x.level;if(!best[k]||x.moves<best[k].moves)best[k]=x;}LB_CACHE=Object.values(best);LB_AT=Date.now();return LB_CACHE;}
 function lbOverall(rows){const mine=deviceId(),byP={};
   for(const r of rows){const k=r.device_id+'|'+r.pid;const o=byP[k]||(byP[k]={name:r.player,face:r.face,at:'',mine:r.device_id===mine,best:{}});
     if(r.updated_at>o.at){o.at=r.updated_at;o.name=r.player;o.face=r.face;}
     o.best[r.level]=Math.min(o.best[r.level]||1e9,r.moves);}
-  return Object.values(byP).map(o=>{const ls=Object.keys(o.best);const under=ls.filter(l=>o.best[l]<=LEVELS[l].par).length;
+  return Object.values(byP).map(o=>{const ls=Object.keys(o.best);const under=ls.filter(l=>o.best[l]<=LEVELS_MAIN[l].par).length;
     return {...o,cleared:ls.length,total:ls.reduce((a,l)=>a+o.best[l],0),under};})
     .sort((a,b)=>b.cleared-a.cleared||b.under-a.under||a.total-b.total);}
 function lbBestPerLevel(rows){const out={};for(const r of rows){const o=out[r.level];if(!o||r.moves<o.moves||(r.moves===o.moves&&r.updated_at<o.updated_at))out[r.level]={name:r.player,moves:r.moves,updated_at:r.updated_at};}return out;}
@@ -324,7 +328,7 @@ const GREEN_APPLE_SVG=s=>`<svg width="${s}" height="${s}" viewBox="0 0 40 40" ar
 const LOCK_SVG='<svg class="lock" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a4840" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 
 // ---------- splash ----------
-function startApp(){ac();show('home');renderPlayers();}
+function startApp(){ac();setMap('main');show('home');renderPlayers();}
 $('splash').addEventListener('click',startApp);
 $('splash').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();startApp();}});
 
@@ -360,11 +364,12 @@ async function offerRestore(p){let rows;try{rows=await lbFetch();}catch(e){retur
   $('restoreNo').onclick=()=>{$('restoreCard').hidden=true;};}
 $('playBtn').onclick=()=>{renderLevels();show('levels');};
 $('lbBtn').onclick=()=>openBoard();$('lbBtn2').onclick=()=>openBoard();
-$('backHome').onclick=()=>{renderPlayers();show('home');};
+$('backHome').onclick=()=>{setMap('main');renderPlayers();show('home');};
+$('bigBtn').onclick=()=>{setMap('big');renderLevels();show('levels');};$('bigBtn').hidden=!LEVELS_BIG.length;
 $('backHome2').onclick=()=>{show(boardFrom);if(boardFrom==='levels')renderLevels();};
 
 // ---------- levels screen: a winding path up the orchard ----------
-function unlockedUpTo(p){let n=0;while(n<LEVELS.length&&p.best&&p.best[n]!=null)n++;return n;} // index of first uncleared
+function unlockedUpTo(p){let n=0;while(n<LEVELS.length&&bestOf(p)[n]!=null)n++;return n;} // index of first uncleared
 const SP=82,PADT=270,PADB=130;
 function nodePos(i,W,H){return [Math.round(W*(0.5+0.32*Math.sin(i*1.05+0.6))),H-PADB-i*SP];}
 function curveThrough(pts){if(pts.length<2)return '';let d=`M${pts[0][0]} ${pts[0][1]}`;
@@ -381,7 +386,8 @@ function renderLevels(){const p=cur();if(!p)return;const path=$('path');path.inn
     <path d="M0 ${H*.45}C${W*.23} ${H*.43} ${W*.46} ${H*.44} ${W*.64} ${H*.46}S${W*.9} ${H*.48} ${W} ${H*.46}V${H}H0z" fill="var(--grass-dark)"/>
     <path d="${d}" fill="none" stroke="#b98d57" stroke-width="34" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#e2c592" stroke-width="26" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#cfad74" stroke-width="3" stroke-dasharray="2 14" stroke-linecap="round"/>${deco}</svg>`;
   const open=/^andrew$/i.test(p.name.trim())?LEVELS.length:unlockedUpTo(p);let curNode=null;
-  LEVELS.forEach((L,i)=>{const [x,y]=pts[i];const best=p.best&&p.best[i];const locked=i>open,curr=i===open,t=best!=null?tier(best,L.par):null;
+  const openN=MAPID==='big'?LEVELS.length:open; // the test map is fully unlocked
+  LEVELS.forEach((L,i)=>{const [x,y]=pts[i];const best=bestOf(p)[i];const locked=i>openN,curr=i===(MAPID==='big'?unlockedUpTo(p):open),t=best!=null?tier(best,L.par):null;
     const b=document.createElement('button');b.type='button';b.className='node'+(locked?' locked':curr?' cur':' '+t);b.disabled=locked;b.style.left=x+'px';b.style.top=y+'px';
     let inner=`<div class="disc"><span>${i+1}</span>${locked?LOCK_SVG:''}${t==='gold'?`<span class="badge">${APPLE_SVG(22)}</span>`:t==='close'?`<span class="badge">${GREEN_APPLE_SVG(22)}</span>`:''}${curr?`<div class="you">${avatarHTML(p)}</div>`:''}</div>`;
     const cap=locked?'':L.bonus?`Bonus · par ${L.par}`:(best!=null&&t!=='gold')?`${best} mv`:`par ${L.par}`;
@@ -389,7 +395,7 @@ function renderLevels(){const p=cur();if(!p)return;const path=$('path');path.inn
     b.setAttribute('aria-label',`Level ${i+1}, ${esc(L.name)}${locked?', locked':cap?', '+cap:''}`);b.onclick=()=>startLevel(i);path.appendChild(b);if(curr)curNode=b;});
   $('lvSummary').textContent=`${clearedCount(p)} of ${MAIN} cleared`;$('goldCount').textContent=goldCount(p);
   const sc=$('levels');requestAnimationFrame(()=>{const y=curNode?parseFloat(curNode.style.top):H;sc.scrollTop=Math.max(0,y-sc.clientHeight*.55);});
-  lbFetch().then(rows=>{if($('levels').hidden)return;const bp=lbBestPerLevel(rows);for(const [l,o] of Object.entries(bp)){const e=$('who'+l);if(e&&!e.closest('.node').disabled){e.textContent=`Best: ${o.name} ${o.moves}`;e.hidden=false;}}}).catch(()=>{});}
+  if(MAPID==='main')lbFetch().then(rows=>{if($('levels').hidden)return;const bp=lbBestPerLevel(rows);for(const [l,o] of Object.entries(bp)){const e=$('who'+l);if(e&&!e.closest('.node').disabled){e.textContent=`Best: ${o.name} ${o.moves}`;e.hidden=false;}}}).catch(()=>{});}
 $('toStart').onclick=()=>{const sc=$('levels');sc.scrollTo({top:sc.scrollHeight,behavior:'smooth'});};
 addEventListener('resize',()=>{if(!$('levels').hidden)renderLevels();});
 
@@ -426,8 +432,8 @@ const cv=$('c'),ctx=cv.getContext('2d'),CELL=40;
 let li=0,lv,st,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0,booms=[],parts=[],chomp=0,deaths=0,hintApple=null,hintDir=null,hintT=0;
 const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
 function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);st=lv.start;hist=[];moves=0;pen=0;dead=false;anim=null;booms=[];parts=[];chomp=0;facing=[1,0];deaths=0;clearHint();
-  cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>${L.bonus?'Bonus level':'Level '+(i+1)+' of '+MAIN}</small>${esc(L.name)}`;$('par').textContent=L.par;
-  const p=cur();$('skipBtn').hidden=!(p&&p.best&&p.best[i]!=null&&i<LEVELS.length-1);
+  cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>${L.bonus?'Bonus level':(MAPID==='big'?'Big board ':'Level ')+(i+1)+' of '+MAIN}</small>${esc(L.name)}`;$('par').textContent=L.par;
+  const p=cur();$('skipBtn').hidden=!(p&&bestOf(p)[i]!=null&&i<LEVELS.length-1);
   $('overlay').hidden=true;$('tipCard').hidden=!L.tip;$('tipText').textContent=L.tip||'';show('game');refreshStats();fit();draw();
   try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
 function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;}
@@ -447,9 +453,9 @@ function move(d){if(dead||anim||!$('overlay').hidden)return;$('padHint').hidden=
   else if(r.win)setTimeout(levelClear,380);
   else if(st.apples.length===0&&lv.exit&&from.apples.length>0)toast('All apples eaten. Now reach the door.');}
 function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
-  if(p){const prev=p.best[li];if(prev==null||moves<prev){p.best[li]=moves;save();lbPush(p,li,moves);note=prev==null?'':`New best (was ${prev}). `;}else note=`Your best is ${prev}. `;}
+  if(p){const b=bestOf(p),prev=b[li];if(prev==null||moves<prev){b[li]=moves;save();if(MAPID==='main')lbPush(p,li,moves);note=prev==null?'':`New best (was ${prev}). `;}else note=`Your best is ${prev}. `;}
   const t=tier(moves,L.par),last=li===MAIN-1;
-  if(last&&!L.bonus)return showFinale(p,t,note);
+  if(last&&!L.bonus&&MAPID==='main')return showFinale(p,t,note);
   const line=t==='gold'?(moves<L.par?`${L.par-moves} under par. Gold apple, and it counts on the Family Board.`:'Matched par. Gold apple, and it counts on the Family Board.'):t==='close'?`${moves-L.par} over par. Green apple. Match par (${L.par}) for gold.`:`Cleared. Match par (${L.par}) to earn the gold apple.`;
   const next=li+1<LEVELS.length?li+1:null;
   showCard('win',`<div class="medal ${t==='gold'?'':t==='close'?'close':'pale'}">${APPLE_SVG(58)}</div><h2>${t==='gold'?(moves<L.par?'Under par!':'Level clear!'):'Level clear!'}</h2>
@@ -458,7 +464,7 @@ function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
     <div class="two"><button id="mReplay">Replay</button><button id="mLevels">Levels</button></div>`);
   if(next!=null)$('mNext').onclick=()=>startLevel(next);$('mReplay').onclick=()=>startLevel(li);$('mLevels').onclick=()=>{renderLevels();show('levels');};
   confetti();}
-function showFinale(p,t,note){SFX.finale();const total=p?LEVELS.reduce((a,L,i)=>a+(!L.bonus&&p.best[i]!=null?p.best[i]:0),0):moves,gold=p?goldCount(p):0;
+function showFinale(p,t,note){SFX.finale();const total=p?LEVELS.reduce((a,L,i)=>a+(!L.bonus&&bestOf(p)[i]!=null?bestOf(p)[i]:0),0):moves,gold=p?goldCount(p):0;
   const bonus=LEVELS.findIndex(L=>L.bonus);const share=`I cleared the Orchard in Orchard Climber: ${MAIN} levels, ${gold} gold apples, ${total} moves. ${location.origin}${location.pathname}`;
   showCard('win',`<div class="medal">${APPLE_SVG(58)}</div><h2>Orchard cleared!</h2>
     <div class="tiles three"><div><b>${MAIN}</b>levels</div><div class="par"><b>${gold}</b>gold</div><div><b>${total}</b>moves</div></div>
@@ -645,17 +651,17 @@ $('skipBtn').onclick=()=>startLevel(li+1);
 
 // ---------- leaderboard ----------
 let boardFrom='home',tab='overall';
-function openBoard(){boardFrom=$('levels').hidden?'home':'levels';show('board');const sel=$('lvSel');if(!sel.options.length)LEVELS.forEach((L,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${L.name}`;sel.appendChild(o);});renderBoard();}
+function openBoard(){boardFrom=$('levels').hidden?'home':'levels';show('board');const sel=$('lvSel');if(!sel.options.length)LEVELS_MAIN.forEach((L,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${i+1}. ${L.name}`;sel.appendChild(o);});renderBoard();}
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));renderBoard();});
 $('lvSel').onchange=()=>renderBoard();$('refreshLb').onclick=()=>renderBoard(true);
 async function renderBoard(force){const body=$('lbBody');$('lvPick').hidden=tab!=='level';body.innerHTML='<p class="sub">Loading…</p>';
   let rows;try{rows=await lbFetch(force);}catch(e){body.innerHTML='<p class="sub">Couldn’t reach the board. Check your connection and tap refresh.</p>';return;}
   const mine=deviceId();
   if(tab==='overall'){const ps=lbOverall(rows);if(!ps.length){body.innerHTML='<p class="sub">Nobody on the board yet. Clear a level!</p>';return;}
-    body.innerHTML='<table><tr><th></th><th>Player</th><th class="r">Cleared</th><th class="r">Gold</th><th class="r">Moves</th></tr>'+ps.map((o,i)=>`<tr class="${o.mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(o.face)?`<img class="lbav" alt="" src="${faceSrc(o.face)}">`:''}${esc(o.name)}</td><td class="r">${o.cleared}/${LEVELS.length}</td><td class="r">${o.under}</td><td class="r">${o.total}</td></tr>`).join('')+'</table>';}
+    body.innerHTML='<table><tr><th></th><th>Player</th><th class="r">Cleared</th><th class="r">Gold</th><th class="r">Moves</th></tr>'+ps.map((o,i)=>`<tr class="${o.mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(o.face)?`<img class="lbav" alt="" src="${faceSrc(o.face)}">`:''}${esc(o.name)}</td><td class="r">${o.cleared}/${LEVELS_MAIN.length}</td><td class="r">${o.under}</td><td class="r">${o.total}</td></tr>`).join('')+'</table>';}
   else{const l=+$('lvSel').value||0;const rs=rows.filter(r=>r.level===l).sort((a,b)=>a.moves-b.moves||a.updated_at.localeCompare(b.updated_at));
-    if(!rs.length){body.innerHTML=`<p class="sub">No one has cleared ${esc(LEVELS[l].name)} yet. Par is ${LEVELS[l].par}.</p>`;return;}
-    body.innerHTML=`<p class="sub" style="margin-bottom:8px">Par ${LEVELS[l].par}</p><table><tr><th></th><th>Player</th><th class="r">Moves</th></tr>`+rs.map((r,i)=>`<tr class="${r.device_id===mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(r.face)?`<img class="lbav" alt="" src="${faceSrc(r.face)}">`:''}${esc(r.player)}</td><td class="r">${r.moves}${r.moves<=LEVELS[l].par?' '+APPLE_SVG(16,'style="vertical-align:-3px"'):''}</td></tr>`).join('')+'</table>';}}
+    if(!rs.length){body.innerHTML=`<p class="sub">No one has cleared ${esc(LEVELS_MAIN[l].name)} yet. Par is ${LEVELS_MAIN[l].par}.</p>`;return;}
+    body.innerHTML=`<p class="sub" style="margin-bottom:8px">Par ${LEVELS_MAIN[l].par}</p><table><tr><th></th><th>Player</th><th class="r">Moves</th></tr>`+rs.map((r,i)=>`<tr class="${r.device_id===mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(r.face)?`<img class="lbav" alt="" src="${faceSrc(r.face)}">`:''}${esc(r.player)}</td><td class="r">${r.moves}${r.moves<=LEVELS_MAIN[l].par?' '+APPLE_SVG(16,'style="vertical-align:-3px"'):''}</td></tr>`).join('')+'</table>';}}
 
 // ---------- boot ----------
 renderPlayers();lbSyncAll();
