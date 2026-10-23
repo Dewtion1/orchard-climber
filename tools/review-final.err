@@ -1,0 +1,14 @@
+1. Windfall           par   9 A3 C0 B0 X0 - states 2821 dead 1% optObj 0 spikes null exit null pushes 0 booms 0 falls 1 maxLen 5
+2. Low Branches       par  13 A3 C0 B0 X0 - states 2330 dead 0% optObj 0 spikes null exit null pushes 0 booms 0 falls 2 maxLen 5
+3. Crate Expectations par  12 A2 C1 B0 X0 - states 7437 dead 5% optObj 0 spikes null exit null pushes 2 booms 0 falls 1 maxLen 4
+4. Mind the Spikes    par  12 A3 C1 B0 X2 - states 1860 dead 5% optObj 0 spikes true exit null pushes 2 booms 0 falls 1 maxLen 5
+5. Exit Stage Right   par  15 A2 C1 B0 X0 E states 3737 dead 11% optObj 0 spikes null exit true pushes 1 booms 0 falls 2 maxLen 4
+6. Fuse Lit           par  11 A1 C0 B1 X0 E states 390 dead 11% optObj 0 spikes null exit true pushes 1 booms 1 falls 2 maxLen 3
+7. Tool Shed          par  30 A4 C1 B0 X0 E states 8378 dead 7% optObj 0 spikes null exit true pushes 3 booms 0 falls 1 maxLen 6
+8. Old Stump          par  30 A4 C0 B1 X0 E states 15464 dead 2% optObj 0 spikes null exit true pushes 4 booms 1 falls 4 maxLen 6
+9. Hedgerow           par  34 A5 C1 B0 X0 E states 254649 dead 9% optObj 0 spikes null exit true pushes 3 booms 0 falls 0 maxLen 7
+10. Crab Apple         par  37 A4 C1 B0 X2 E states 50620 dead 6% optObj 0 spikes false exit true pushes 4 booms 0 falls 3 maxLen 6
+11. Trellis            par  44 A5 C2 B0 X3 E states 118687 dead 6% optObj 1 spikes false exit true pushes 1 booms 0 falls 2 maxLen 7
+12. High Shelf         par  47 A5 C1 B0 X2 E states 244365 dead 4% optObj 0 spikes false exit true pushes 2 booms 0 falls 2 maxLen 7
+13. Slow Climb         par  46 A5 C2 B0 X2 E states 196550 dead 9% optObj 1 spikes true exit true pushes 7 booms 0 falls 2 maxLen 7
+14. Wasp Trap          par  46 A7 C1 B0 X1 E states 229720 dead 9% optObj 0 spikes false exit true pushes 3 booms 0 falls 2 maxLen 9
