@@ -113,7 +113,7 @@ select{font-family:var(--body);font-weight:700;font-size:14px;padding:8px;border
 <section class="screen" id="home">
   <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="52" r="34" fill="#e0493a"/><circle cx="38" cy="40" r="7" fill="rgba(255,255,255,.5)"/><path d="M50 20c2-8 4-12 8-14" stroke="#5d4a2e" stroke-width="5" fill="none" stroke-linecap="round"/><ellipse cx="64" cy="14" rx="11" ry="5" transform="rotate(-25 64 14)" fill="#4caf50"/><path d="M22 70c10-14 22-14 32 0s20 14 28 0" stroke="#2f7d3a" stroke-width="12" fill="none" stroke-linecap="round"/><circle cx="82" cy="66" r="3" fill="#fff"/></svg>
   <h1>Orchard Climber</h1>
-  <p class="sub">Eat apples to grow. The longer you are, the higher you can climb. 50 levels, one family leaderboard.</p>
+  <p class="sub">Eat apples to grow. The longer you are, the higher you can climb. Push crates, dodge spikes, drop bombs. 50 levels, one family leaderboard.</p>
   <div class="card">
     <h2>Who's playing?</h2>
     <div class="players" id="players"></div>
@@ -172,8 +172,10 @@ const SITE='orchard-climber.vercel.app';
 const KEY='orchard.v1';
 let S={players:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw);}catch(e){}
-const LEVELS_V2='2026-10-21T11:40:00Z'; // levels 6-50 were replaced; older scores for them don't count
+const LEVELS_V2='2026-10-21T11:40:00Z',LEVELS_V3='2026-10-23T12:00:00Z'; // levels 6-50 replaced on the 21st, 20-50 again on the 23rd
+const rowValid=x=>x.level<5||(x.level<19&&x.updated_at>=LEVELS_V2)||x.updated_at>=LEVELS_V3;
 if(!S.v2){for(const p of S.players)for(const k of Object.keys(p.best||{}))if(+k>=5)delete p.best[k];S.v2=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+if(!S.v3){for(const p of S.players)for(const k of Object.keys(p.best||{}))if(+k>=19)delete p.best[k];S.v3=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const cur=()=>S.players.find(p=>p.id===S.current)||null;
 function deviceId(){try{let d=localStorage.getItem('orchard.device');if(!d){d='d'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('orchard.device',d);}return d;}catch(e){return 'danon';}}
@@ -190,7 +192,7 @@ function lbSyncAll(){for(const p of S.players)for(const [l,m] of Object.entries(
 let LB_CACHE=null,LB_AT=0;
 async function lbFetch(force){if(!force&&LB_CACHE&&Date.now()-LB_AT<20000)return LB_CACHE;
   const r=await fetch(LB_URL+'?select=device_id,pid,player,face,level,moves,updated_at&limit=5000',{headers:LB_H});
-  if(!r.ok)throw new Error(r.status);LB_CACHE=(await r.json()).filter(x=>!x.pid.startsWith('pub-')&&(x.level<5||x.updated_at>=LEVELS_V2));LB_AT=Date.now();return LB_CACHE;}
+  if(!r.ok)throw new Error(r.status);LB_CACHE=(await r.json()).filter(x=>!x.pid.startsWith('pub-')&&rowValid(x));LB_AT=Date.now();return LB_CACHE;}
 function lbOverall(rows){const mine=deviceId(),byP={};
   for(const r of rows){const k=r.device_id+'|'+r.pid;const o=byP[k]||(byP[k]={name:r.player,face:r.face,at:'',mine:r.device_id===mine,best:{}});
     if(r.updated_at>o.at){o.at=r.updated_at;o.name=r.player;o.face=r.face;}
@@ -245,57 +247,73 @@ function renderLevels(){const p=cur();if(!p)return;const g=$('lvGrid');g.innerHT
     b.innerHTML=`${i+1}<small>${best!=null?best+' mv':(i>open?'🔒':'par '+L.par)}</small>`;b.onclick=()=>startLevel(i);g.appendChild(b);});}
 
 // ---------- rules ----------
-function parseLevel(lv){const rows=lv.rows,H=rows.length,W=rows[0].length,walls=new Set(),apples=[];let head=null,body=[];
-  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=rows[y][x];if(c==='#')walls.add(x+','+y);else if(c==='A')apples.push([x,y]);else if(c==='S')head=[x,y];else if(c==='o')body.push([x,y]);}
-  const snake=[head];let rem=body.slice();while(rem.length){const [hx,hy]=snake[snake.length-1];const i=rem.findIndex(([x,y])=>Math.abs(x-hx)+Math.abs(y-hy)===1);if(i<0)break;snake.push(rem[i]);rem.splice(i,1);}
-  return {W,H,walls,snake,apples};}
-const isWall=(lv,x,y)=>lv.walls.has(x+','+y);
-function stepState(lv,snake,apples,dx,dy){const [hx,hy]=snake[0],nx=hx+dx,ny=hy+dy;
-  if(nx<0||nx>=lv.W||ny<0||ny>=lv.H||isWall(lv,nx,ny))return null;if(snake.some(([x,y])=>x===nx&&y===ny))return null;
-  const ai=apples.findIndex(([x,y])=>x===nx&&y===ny),ate=ai>=0;let ns=[[nx,ny],...snake.slice(0,ate?snake.length:snake.length-1)];const na=ate?apples.filter((_,i)=>i!==ai):apples;
-  let fell=0,dead=false;for(let k=0;k<lv.H+2;k++){if(ns.some(([x,y])=>isWall(lv,x,y+1)))break;ns=ns.map(([x,y])=>[x,y+1]);fell++;if(ns.some(([x,y])=>y>=lv.H)){dead=true;break;}}
-  return {snake:ns,apples:na,ate,dead,fell};}
-// BFS hint: next move on a shortest solution from the current state
-function hintMove(lv,snake,apples){const DIRS=[[0,-1,'U'],[0,1,'D'],[-1,0,'L'],[1,0,'R']];const key=(s,a)=>s.map(p=>p.join(',')).join(';')+'|'+a.map(p=>p.join(',')).sort().join(';');
-  const seen=new Set([key(snake,apples)]);let q=[{snake,apples,first:null}];let n=0;
-  while(q.length&&n++<150000){const nq=[];for(const st of q){for(const [dx,dy,c] of DIRS){const r=stepState(lv,st.snake,st.apples,dx,dy);if(!r||r.dead)continue;const f=st.first||c;
-    if(r.apples.length===0)return f;const k=key(r.snake,r.apples);if(seen.has(k))continue;seen.add(k);nq.push({snake:r.snake,apples:r.apples,first:f});}}q=nq;}return null;}
+/*RULES*/
 
 // ---------- game ----------
 const cv=$('c'),ctx=cv.getContext('2d'),CELL=40;
-let li=0,lv,snake,apples,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0;
-const DIRS={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
-function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);snake=lv.snake;apples=lv.apples;hist=[];moves=0;pen=0;dead=false;anim=null;facing=[1,0];
+let li=0,lv,st,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0,booms=[];
+const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
+function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);st=lv.start;hist=[];moves=0;pen=0;dead=false;anim=null;booms=[];facing=[1,0];
   cv.width=lv.W*CELL;cv.height=lv.H*CELL;$('gName').innerHTML=`<small>Level ${i+1} of ${LEVELS.length}</small>${esc(L.name)}`;$('par').textContent=L.par;
   const p=cur();$('skipBtn').hidden=!(p&&p.best&&p.best[i]!=null&&i<LEVELS.length-1);
-  $('msg').hidden=true;show('game');refreshStats();fit();draw();try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
-function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=snake.length;}
-function move(d){if(dead||anim||!$('msg').hidden)return;const [dx,dy]=DIRS[d];const r=stepState(lv,snake,apples,dx,dy);
+  $('msg').hidden=true;show('game');refreshStats();fit();draw();
+  if(L.tip)toast(L.tip);
+  try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
+function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;}
+function move(d){if(dead||anim||!$('msg').hidden)return;$('padHint').hidden=true;const [dx,dy]=DIR[d];const r=stepState(lv,st,dx,dy);
   if(!r){bumpT=1;draw();return;}
-  facing=[dx,dy];hist.push({snake,apples,moves});const from=snake;snake=r.snake;apples=r.apples;moves++;refreshStats();animate(from,r.fell);
-  if(r.dead){dead=true;setTimeout(()=>showMsg('Splat!','The snake fell off the world.','Try again',()=>startLevel(li),'Undo',()=>undo()),420);}
-  else if(apples.length===0)setTimeout(levelClear,380);}
+  facing=[dx,dy];hist.push({st,moves});const from=st;st=r.state;moves++;refreshStats();animate(from,r);
+  if(r.dead){dead=true;const why=r.events.some(e=>e.type==='explode')?'Too close to the bang.':(st.snake.some(([x,y])=>lv.spikes.has(x+','+y))?'Spiked!':'The snake fell off the world.');
+    setTimeout(()=>showMsg('Splat!',why,'Try again',()=>startLevel(li),'Undo',()=>undo()),520);}
+  else if(r.win)setTimeout(levelClear,380);
+  else if(st.apples.length===0&&lv.exit&&from.apples.length>0)toast('All apples eaten. Now reach the door.');}
 function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
   if(p){const prev=p.best[li];if(prev==null||moves<prev){p.best[li]=moves;save();lbPush(p,li,moves);note=prev==null?'':`New best (was ${prev}). `;}else note=`Your best is ${prev}. `;}
   const underPar=moves<=L.par;const last=li===LEVELS.length-1;
   showMsg(last?'Orchard cleared!':(underPar?'Under par!':'Level clear!'),`${moves} moves, par ${L.par}. ${note}`.trim(),last?'Back to levels':'Next level',()=>last?(renderLevels(),show('levels')):startLevel(li+1),'Replay',()=>startLevel(li));}
 function showMsg(t,p,b,fn,b2,fn2){$('mt').textContent=t;$('mp').textContent=p;$('mb').textContent=b;$('mb').onclick=fn;$('mb2').hidden=!b2;if(b2){$('mb2').textContent=b2;$('mb2').onclick=fn2;}$('msg').hidden=false;}
-function undo(){if(!hist.length)return;const h=hist.pop();snake=h.snake;apples=h.apples;moves=h.moves;dead=false;anim=null;$('msg').hidden=true;refreshStats();draw();}
-function animate(from,fell){if(matchMedia('(prefers-reduced-motion: reduce)').matches){draw();return;}
-  anim={from,t0:performance.now(),dur:90+Math.min(fell,6)*55};requestAnimationFrame(tick);}
+function undo(){if(!hist.length)return;const h=hist.pop();st=h.st;moves=h.moves;dead=false;anim=null;booms=[];$('msg').hidden=true;refreshStats();draw();}
+function animate(from,r){const booming=r.events.filter(e=>e.type==='explode');
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){draw();return;}
+  anim={from,t0:performance.now(),dur:90+Math.min(r.fell,6)*55+(booming.length?200:0)};
+  for(const e of booming)booms.push({x:e.x,y:e.y,t0:performance.now()+anim.dur-220});
+  requestAnimationFrame(tick);}
 function tick(now){if(!anim)return;const p=Math.min(1,(now-anim.t0)/anim.dur);draw(p);if(p<1)requestAnimationFrame(tick);else{anim=null;draw();}}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-function draw(p=1){const W=lv.W,H=lv.H;
+function drawRock(x,y,grassy){ctx.fillStyle='#8a7a66';ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.fillStyle='#5d5044';ctx.fillRect(x*CELL,y*CELL+CELL-6,CELL,6);
+  ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(x*CELL+CELL/2,y*CELL+8,CELL/2-2,10);ctx.fillRect(x*CELL+2,y*CELL+22,CELL/2-4,10);
+  if(grassy){ctx.fillStyle='#6fb54a';ctx.fillRect(x*CELL,y*CELL,CELL,9);ctx.fillStyle='#9bd77f';ctx.fillRect(x*CELL,y*CELL,CELL,3);}}
+function drawCrate(px,py){rr(px+3,py+3,CELL-6,CELL-6,5);ctx.fillStyle='#c98a3e';ctx.fill();ctx.strokeStyle='#7a4f1d';ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px+6,py+6);ctx.lineTo(px+CELL-6,py+CELL-6);ctx.moveTo(px+CELL-6,py+6);ctx.lineTo(px+6,py+CELL-6);ctx.stroke();}
+function drawBomb(px,py){const cx=px+CELL/2,cy=py+CELL/2+3;ctx.fillStyle='#2b2b33';ctx.beginPath();ctx.arc(cx,cy,CELL*.3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.arc(cx-4,cy-5,4,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#8a7a66';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx+4,cy-11);ctx.quadraticCurveTo(cx+10,cy-20,cx+14,cy-15);ctx.stroke();
+  const f=(performance.now()/120)%1;ctx.fillStyle=f<.5?'#ffb13b':'#ff6a2a';ctx.beginPath();ctx.arc(cx+14,cy-15,3.5,0,Math.PI*2);ctx.fill();}
+function drawSpikes(x,y){ctx.fillStyle='#9aa3ad';for(let i=0;i<4;i++){const sx=x*CELL+i*CELL/4;ctx.beginPath();ctx.moveTo(sx,y*CELL+CELL);ctx.lineTo(sx+CELL/8,y*CELL+CELL*.4);ctx.lineTo(sx+CELL/4,y*CELL+CELL);ctx.closePath();ctx.fill();}
+  ctx.fillStyle='#6b7480';ctx.fillRect(x*CELL,y*CELL+CELL-4,CELL,4);}
+function drawExit(x,y,open){const px=x*CELL,py=y*CELL;ctx.fillStyle=open?'#e3a51f':'#5d5044';rr(px+7,py+4,CELL-14,CELL-4,8);ctx.fill();
+  ctx.fillStyle=open?'#fff3c4':'#8a7a66';rr(px+12,py+9,CELL-24,CELL-9,5);ctx.fill();
+  if(open){ctx.fillStyle='rgba(227,165,31,.35)';ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,CELL*.6,0,Math.PI*2);ctx.fill();}
+  else{ctx.fillStyle='#3b3028';ctx.beginPath();ctx.arc(px+CELL-15,py+CELL/2+2,2.5,0,Math.PI*2);ctx.fill();}}
+function draw(p=1){const W=lv.W,H=lv.H,now=performance.now();
   const g=ctx.createLinearGradient(0,0,0,cv.height);g.addColorStop(0,'#cfe6f2');g.addColorStop(1,'#eaf3ea');ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);
   ctx.strokeStyle='rgba(33,58,42,.06)';ctx.lineWidth=1;for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,cv.height);ctx.stroke();}for(let y=1;y<H;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(cv.width,y*CELL);ctx.stroke();}
-  for(const k of lv.walls){const [x,y]=k.split(',').map(Number);ctx.fillStyle='#8a7a66';ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.fillStyle='#5d5044';ctx.fillRect(x*CELL,y*CELL+CELL-6,CELL,6);
-    ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(x*CELL+CELL/2,y*CELL+8,CELL/2-2,10);ctx.fillRect(x*CELL+2,y*CELL+22,CELL/2-4,10);
-    if(!isWall(lv,x,y-1)){ctx.fillStyle='#6fb54a';ctx.fillRect(x*CELL,y*CELL,CELL,9);ctx.fillStyle='#9bd77f';ctx.fillRect(x*CELL,y*CELL,CELL,3);}}
-  for(const [x,y] of apples){const cx=x*CELL+CELL/2,cy=y*CELL+CELL/2+2;ctx.fillStyle='#e0493a';ctx.beginPath();ctx.arc(cx,cy,CELL*.32,0,Math.PI*2);ctx.fill();
+  // rock, with holes a bomb has blown shown as rubble
+  const gone=new Set(st.gone);
+  for(const k of lv.walls){const [x,y]=k.split(',').map(Number);if(gone.has(k)){ctx.fillStyle='rgba(93,80,68,.25)';for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(x*CELL+8+i*8,y*CELL+CELL-6-(i%2)*5,3,0,Math.PI*2);ctx.fill();}continue;}
+    drawRock(x,y,!(lv.walls.has(x+','+(y-1))&&!gone.has(x+','+(y-1))));}
+  for(const k of lv.spikes){const [x,y]=k.split(',').map(Number);if(!st.objs.some(o=>o.x===x&&o.y===y))drawSpikes(x,y);}
+  if(lv.exit)drawExit(lv.exit[0],lv.exit[1],st.apples.length===0);
+  for(const [x,y] of st.apples){const cx=x*CELL+CELL/2,cy=y*CELL+CELL/2+2;ctx.fillStyle='#e0493a';ctx.beginPath();ctx.arc(cx,cy,CELL*.32,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.arc(cx-5,cy-6,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#5d4a2e';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy-11);ctx.lineTo(cx+2,cy-18);ctx.stroke();
     ctx.fillStyle='#4caf50';ctx.beginPath();ctx.ellipse(cx+7,cy-15,6,3,-.5,0,Math.PI*2);ctx.fill();}
-  const segs=snake.map((s,i)=>{if(!anim)return s;const f=anim.from[i]||anim.from[anim.from.length-1];return [f[0]+(s[0]-f[0])*p,f[1]+(s[1]-f[1])*p];});
-  const shake=bumpT>0?Math.sin(performance.now()/20)*3*bumpT:0;ctx.save();ctx.translate(shake,0);
+  // objects (interpolated by id; vanished bombs are drawn at their last position until the boom)
+  const objsNow=anim?[...st.objs,...anim.from.objs.filter(o=>!st.objs.some(q=>q.id===o.id)&&p<.85)]:st.objs;
+  for(const o of objsNow){let x=o.x,y=o.y;if(anim){const f=anim.from.objs.find(q=>q.id===o.id);if(f&&st.objs.some(q=>q.id===o.id)){x=f.x+(o.x-f.x)*p;y=f.y+(o.y-f.y)*p;}}
+    if(o.t==='C')drawCrate(x*CELL,y*CELL);else drawBomb(x*CELL,y*CELL);}
+  const snake=st.snake;
+  const segs=snake.map((s,i)=>{if(!anim)return s;const fs=anim.from.snake;const f=fs[i]||fs[fs.length-1];return [f[0]+(s[0]-f[0])*p,f[1]+(s[1]-f[1])*p];});
+  const shake=bumpT>0?Math.sin(now/20)*3*bumpT:0;ctx.save();ctx.translate(shake,0);
   for(let i=segs.length-1;i>=0;i--){const [x,y]=segs[i];const t=i/Math.max(1,segs.length-1);ctx.fillStyle=i===0?'#2f7d3a':(t<.5?'#4caf50':'#56b85a');rr(x*CELL+3,y*CELL+3,CELL-6,CELL-6,i===0?13:11);ctx.fill();
     if(i>0){ctx.fillStyle='rgba(255,255,255,.18)';rr(x*CELL+9,y*CELL+8,CELL-18,8,4);ctx.fill();}}
   const [hx,hy]=segs[0],ex=hx*CELL+CELL/2,ey=hy*CELL+CELL/2,[fx,fy]=facing;
@@ -303,7 +321,15 @@ function draw(p=1){const W=lv.W,H=lv.H;
   if(im&&im.complete&&im.naturalWidth){ctx.save();ctx.beginPath();ctx.arc(ex,ey,CELL*.42,0,Math.PI*2);ctx.clip();ctx.drawImage(im,ex-CELL*.42,ey-CELL*.42,CELL*.84,CELL*.84);ctx.restore();
     ctx.strokeStyle='#2f7d3a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(ex,ey,CELL*.42,0,Math.PI*2);ctx.stroke();}
   else{const off=fx!==0?[[0,-7],[0,7]]:[[-7,0],[7,0]];for(const [ox,oy] of off){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex+ox+fx*6,ey+oy+fy*6,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1d2a20';ctx.beginPath();ctx.arc(ex+ox+fx*8,ey+oy+fy*8,2.5,0,Math.PI*2);ctx.fill();}}
-  ctx.restore();if(bumpT>0){bumpT-=.12;requestAnimationFrame(()=>draw());}}
+  ctx.restore();
+  // explosions
+  booms=booms.filter(b=>now-b.t0<450);let more=false;
+  for(const b of booms){const q=(now-b.t0)/450;if(q<0){more=true;continue;}more=true;const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;
+    ctx.fillStyle=`rgba(255,${Math.round(180-120*q)},40,${1-q})`;ctx.beginPath();ctx.arc(cx,cy,CELL*(.3+q*1.1),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(255,255,255,${(1-q)*.8})`;ctx.beginPath();ctx.arc(cx,cy,CELL*(.1+q*.5),0,Math.PI*2);ctx.fill();}
+  if(bumpT>0){bumpT-=.12;more=true;}
+  if(st.objs.some(o=>o.t==='B'))more=true; // fuse flicker
+  if(more&&!anim)requestAnimationFrame(()=>{if(!anim)draw();});}
 function fit(){const wrap=$('wrap');if(!lv)return;const w=Math.min(wrap.clientWidth,Math.max(120,wrap.clientHeight)*lv.W/lv.H);cv.style.width=w+'px';}
 addEventListener('resize',fit);
 // input
@@ -318,8 +344,8 @@ addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')r
   if(m){e.preventDefault();move(m);}else if(e.key==='z'||e.key==='Z')undo();else if(e.key==='r'||e.key==='R')startLevel(li);});
 $('undo').onclick=undo;$('reset').onclick=()=>startLevel(li);$('backLv').onclick=()=>{renderLevels();show('levels');};
 $('skipBtn').onclick=()=>startLevel(li+1);
-$('hintBtn').onclick=()=>{if(dead||!$('msg').hidden)return;const h=hintMove(lv,snake,apples);if(!h){toast('No way out from here. Undo a few moves.');return;}
-  toast('Try: '+{U:'▲ up',D:'▼ down',L:'◀ left',R:'▶ right'}[h]+'  (+3 moves)');pen+=3;refreshStats();};
+$('hintBtn').onclick=()=>{if(dead||!$('msg').hidden)return;toast('Thinking…');setTimeout(()=>{const h=hintMove(lv,st);if(!h){toast('No way out from here. Undo a few moves.');return;}
+  toast('Try: '+{U:'▲ up',D:'▼ down',L:'◀ left',R:'▶ right'}[h]+'  (+3 moves)');pen+=3;refreshStats();},30);};
 
 // ---------- leaderboard ----------
 let boardFrom='home',tab='overall';

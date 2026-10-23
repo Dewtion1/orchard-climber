@@ -1,2 +1,5 @@
 tools/run-*.log
 tools/pool-*.json
+tools/run2-*.log
+tools/pool2-*.json
+tools/faces.js
