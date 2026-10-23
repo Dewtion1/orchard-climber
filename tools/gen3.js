@@ -8,7 +8,8 @@ const {parseLevel,stepState,stateKey,solve,DIRS}=require('./rules.js');
 const {analyse,replay}=require('./gen2.js');
 // GRID=WxH makes bigger boards: 14x12 parents are padded (sky above, floor to the right) and mutated harder until the new space is used
 let W=14,H=12;if(process.env.GRID){const m=/^(\d+)x(\d+)$/.exec(process.env.GRID);if(m){W=+m[1];H=+m[2];}}
-const BIG=W!==14||H!==12,AREA=(W*H)/(14*12),TAG=process.env.GRID?process.env.GRID+'-':'';
+const BUTTON=!!process.env.BUTTON; // BUTTON=1: every child has a button and its shortest solution sets a bomb off with it
+const BIG=W!==14||H!==12,AREA=(W*H)/(14*12),TAG=(process.env.GRID?process.env.GRID+'-':'')+(BUTTON?'btn-':'');
 let seed=+process.argv[2]||11;const POOL=+process.argv[3]||20;const DEAD_FLOOR=process.argv[4]!=null?+process.argv[4]:0.08;
 const [MIN_SOL,MAX_SOL]=[30,Math.round(170*Math.sqrt(AREA))],MIN_DIST=4;const CAP_SOLVE=Math.round(90000*AREA),CAP_AN=Math.round(260000*AREA);
 function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
@@ -20,7 +21,7 @@ const pad=rows=>{const h0=rows.length,w0=rows[0].length;if(h0===H&&w0===W)return
 function load(){const base=require('./levels50.json').filter(l=>!l.tip&&!l.bonus);let extra=[];
   const re=new RegExp('^pool3-'+TAG+'.*\\.json$');for(const f of fs.readdirSync('.'))if(re.test(f)){try{extra=extra.concat(JSON.parse(fs.readFileSync(f)));}catch(e){}}
   const parents=[...base.map(l=>pad(l.rows)).filter(Boolean),...extra.map(p=>p.rows)];
-  const known=BIG?extra.map(p=>p.rows):[...require('./levels50.json').map(l=>l.rows),...extra.map(p=>p.rows)];
+  const known=(BIG||BUTTON)?extra.map(p=>p.rows):[...require('./levels50.json').map(l=>l.rows),...extra.map(p=>p.rows)];
   return {parents,known};}
 // for big boards: the padded region (top rows, right columns) must actually hold something, not just sky
 const usesNew=rows=>{if(!BIG)return true;let n=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if((y<H-12||x>=14)&&y<H-1&&rows[y][x]!=='.')n++;}return n>=3;};
@@ -42,11 +43,15 @@ const EDITS=[
   g=>{const o=cells(g,c=>c==='C'||c==='B');if(o.length<=1)return false;const [x,y]=pick(o);g[y][x]='.';return true;},
   g=>{const t=tops(g).filter(([x,y])=>!nearSnake(g,x,y));if(!t.length)return false;const [x,y]=pick(t);const run=ri(1,3);let n=0;for(let k=0;k<run;k++){const xx=x+k;if(xx<W&&g[y][xx]==='.'&&g[y+1]&&g[y+1][xx]==='#'&&!nearSnake(g,xx,y)){g[y][xx]='X';n++;}}return n>0;},
   g=>{const s=cells(g,c=>c==='X');if(!s.length)return false;const [x,y]=pick(s);g[y][x]='.';return true;},
+  g=>{if(!BUTTON)return false;const b=cells(g,c=>c==='T');const t=tops(g).filter(([x,y])=>!nearSnake(g,x,y));if(!t.length)return false;for(const [x,y] of b)g[y][x]='.';const [x,y]=pick(t);g[y][x]='T';return true;},
   g=>{const e=cells(g,c=>c==='E');const t=tops(g).filter(([x,y])=>y<=H-3&&!nearSnake(g,x,y));if(!e.length||!t.length)return false;const [ex,ey]=e[0],[tx,ty]=pick(t);g[ey][ex]='.';g[ty][tx]='E';return true;},
   g=>{const s=cells(g,c=>c==='S'),o=cells(g,c=>c==='o');if(s.length!==1||o.length!==1)return false;const [sx,sy]=s[0],[ox,oy]=o[0];const d=rnd()<.5?-1:1;const nsx=sx+d,nox=ox+d;
     if(nsx<0||nsx>=W||nox<0||nox>=W||sy!==H-2||g[sy][nsx]!=='.'&&nsx!==ox||g[oy][nox]!=='.'&&nox!==sx||g[H-1][nsx]!=='#'||g[H-1][nox]!=='#')return false;g[sy][sx]='.';g[oy][ox]='.';g[sy][nsx]='S';g[oy][nox]='o';return true;}
 ];
 function mutate(rows){const g=toG(rows);const n=BIG?ri(4,8):ri(2,4);let done=0;for(let i=0;i<n*4&&done<n;i++){if(pick(EDITS)(g))done++;}
+  if(BUTTON){ // make sure there is a button and a bomb
+    if(!cells(g,c=>c==='T').length){const t=tops(g).filter(([x,y])=>!nearSnake(g,x,y));if(!t.length)return null;const [x,y]=pick(t);g[y][x]='T';}
+    if(!cells(g,c=>c==='B').length){const o=cells(g,c=>c==='C');const t=tops(g).filter(([x,y])=>!nearSnake(g,x,y));if(o.length&&rnd()<.5){const [x,y]=pick(o);g[y][x]='B';}else{if(!t.length)return null;const [x,y]=pick(t);g[y][x]='B';}}}
   if(done<2)return null;const out=g.map(r=>r.join(''));const k=out.join('');const na=(k.match(/A/g)||[]).length;
   if(na<4||na>(BIG?Math.min(12,Math.round(8*AREA)):8)||!/[CB]/.test(k)||!usesNew(out)||!k.includes('E')||!out[H-2].includes('S'))return null;
   // the head must still have its body next to it
@@ -66,13 +71,14 @@ while(pool.length<POOL&&tries<200000){tries++;
   const rp=replay(rows,q.path);if(!rp)continue;
   if(crates&&rp.pushes<2){rej.pushes++;continue;}
   if(bombs&&rp.booms<1){rej.booms++;continue;}
+  if(BUTTON&&rp.bbooms<1){rej.booms++;continue;}
   // must play differently from its parent and sit far enough from every known level
   if(q.path===solOf(parent)){rej.samepath++;continue;}
   let near=false;for(const o of known)if(dist(o,rows)<MIN_DIST){near=true;break;}if(!near)for(const o of pool)if(dist(o.rows,rows)<MIN_DIST){near=true;break;}
   if(near){rej.near++;continue;}
   const a=analyse(rows,CAP_AN);if(!a){rej.analyse++;continue;}
   if(a.deadRatio<DEAD_FLOOR){rej.dead++;continue;}
-  pool.push({rows,W,H,...a,crates,bombs,spikes:(k.match(/X/g)||[]).length,pushes:rp.pushes,booms:rp.booms,falls:rp.falls,maxLen:rp.maxLen,mode:'mutate',parent:parent.join('')});
+  pool.push({rows,W,H,...a,crates,bombs,bbooms:rp.bbooms,spikes:(k.match(/X/g)||[]).length,pushes:rp.pushes,booms:rp.booms,falls:rp.falls,maxLen:rp.maxLen,mode:'mutate',parent:parent.join('')});
   parents.push(rows);known.push(rows);
   process.stderr.write(`pool ${pool.length} (tries ${tries}, ${((Date.now()-t0)/1000).toFixed(0)}s) sol ${a.sol} dead ${(a.deadRatio*100).toFixed(0)}% pushes ${rp.pushes} booms ${rp.booms}\n`);
   fs.writeFileSync(`pool3-${TAG}${process.argv[2]||'0'}.json`,JSON.stringify(pool));

@@ -37,10 +37,10 @@ function analyse(rows,cap){cap=cap||180000;
 
 // Replay a solution path and count what actually happens in it (same method as review.js).
 function replay(rows,path){
-  const lv=parseLevel({rows});let st=lv.start,pushes=0,booms=0,falls=0,maxLen=0;
+  const lv=parseLevel({rows});let st=lv.start,pushes=0,booms=0,bbooms=0,falls=0,maxLen=0;
   for(const c of path){const [dx,dy]=DIRS.find(d=>d[2]===c);const r=stepState(lv,st,dx,dy);if(!r)return null;st=r.state;
-    pushes+=r.events.filter(e=>e.type==='push').length;booms+=r.events.filter(e=>e.type==='explode').length;if(r.fell)falls++;maxLen=Math.max(maxLen,st.snake.length);}
-  return {pushes,booms,falls,maxLen};
+    pushes+=r.events.filter(e=>e.type==='push').length;booms+=r.events.filter(e=>e.type==='explode').length;bbooms+=r.events.filter(e=>e.type==='explode'&&e.button).length;if(r.fell)falls++;maxLen=Math.max(maxLen,st.snake.length);}
+  return {pushes,booms,bbooms,falls,maxLen};
 }
 
 function blank(){const g=[];for(let y=0;y<H;y++)g.push(Array(W).fill('.'));for(let x=0;x<W;x++)g[H-1][x]='#';return g;}

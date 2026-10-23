@@ -1,18 +1,19 @@
 // Orchard Climber rules v2. Shared verbatim by the game page (pasted in by build.py) and the node tools.
-// Tiles: # rock  A apple  C crate  B bomb  X spikes  E exit  S head  o body  . empty
+// Tiles: # rock  A apple  C crate  B bomb  X spikes  E exit  S head  o body  T button  . empty
+// Button: when the head comes to rest on it, every bomb on the board explodes where it sits (same blast as a landing bomb).
 // A move: head steps one cell (pushing a crate/bomb if one is there), then gravity settles everything.
 // Gravity: the snake and every object fall together unless resting on rock or on something resting on rock.
 // A bomb that lands after falling explodes: it vanishes, destroys the rock directly beneath it, and kills the snake if a segment is next to it.
 // Spikes kill the snake if any segment ends up on them. Objects can sit on spikes and cover them.
 // Win: all apples eaten and (if the level has an exit) the head is on the exit.
 function parseLevel(lv){
-  const rows=lv.rows,H=rows.length,W=rows[0].length,walls=new Set(),spikes=new Set(),apples=[],objs=[];let head=null,body=[],exit=null,oid=0;
+  const rows=lv.rows,H=rows.length,W=rows[0].length,walls=new Set(),spikes=new Set(),buttons=new Set(),apples=[],objs=[];let head=null,body=[],exit=null,oid=0;
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=rows[y][x];
     if(c==='#')walls.add(x+','+y);else if(c==='A')apples.push([x,y]);else if(c==='S')head=[x,y];else if(c==='o')body.push([x,y]);
-    else if(c==='C'||c==='B')objs.push({t:c,x,y,id:oid++});else if(c==='X')spikes.add(x+','+y);else if(c==='E')exit=[x,y];}
+    else if(c==='C'||c==='B')objs.push({t:c,x,y,id:oid++});else if(c==='X')spikes.add(x+','+y);else if(c==='T')buttons.add(x+','+y);else if(c==='E')exit=[x,y];}
   const snake=[head];let rem=body.slice();
   while(rem.length){const [hx,hy]=snake[snake.length-1];const i=rem.findIndex(([x,y])=>Math.abs(x-hx)+Math.abs(y-hy)===1);if(i<0)break;snake.push(rem[i]);rem.splice(i,1);}
-  return {W,H,walls,spikes,exit,start:{snake,apples,objs,gone:[]}};
+  return {W,H,walls,spikes,buttons,exit,start:{snake,apples,objs,gone:[]}};
 }
 const K=(x,y)=>x+','+y;
 function stateKey(st){let k='';for(const p of st.snake)k+=p[0]+','+p[1]+';';k+='|';if(st.apples.length)k+=st.apples.map(p=>p[0]+','+p[1]).sort().join(';');k+='|';if(st.objs.length)k+=st.objs.map(o=>o.t+o.x+','+o.y).sort().join(';');k+='|';if(st.gone.length)k+=st.gone.slice().sort().join(';');return k;}
@@ -39,7 +40,11 @@ function stepState(lv,st,dx,dy){
   const onSpike=()=>snake.some(([x,y])=>lv.spikes.has(K(x,y)));
   if(onSpike())dead=true;
   const goneSet=new Set(gone);const rock=(x,y)=>lv.walls.has(K(x,y))&&!goneSet.has(K(x,y));
-  for(let iter=0;iter<lv.H*3&&!dead;iter++){
+  const blow=i=>{const o=objs[i];events.push({type:'explode',x:o.x,y:o.y});
+    const below=K(o.x,o.y+1);if(lv.walls.has(below)&&!goneSet.has(below)){gone.push(below);goneSet.add(below);}
+    if(snake.some(([x,y])=>Math.abs(x-o.x)+Math.abs(y-o.y)===1))dead=true;
+    objs.splice(i,1);};
+  const settle=()=>{for(let iter=0;iter<lv.H*3&&!dead;iter++){
     // support fixpoint. index 0 = snake, i+1 = objs[i]
     const n=objs.length+1,sup=new Uint8Array(n);const owner=new Map();
     for(const [x,y] of snake)owner.set(K(x,y),0);objs.forEach((o,i)=>owner.set(K(o.x,o.y),i+1));
@@ -49,11 +54,7 @@ function stepState(lv,st,dx,dy){
       for(let i=0;i<objs.length;i++){if(sup[i+1])continue;const o=objs[i];if(o.y+1>=lv.H)continue;if(rock(o.x,o.y+1)){sup[i+1]=1;changed=true;continue;}const w=owner.get(K(o.x,o.y+1));if(w!=null&&w!==i+1&&sup[w]){sup[i+1]=1;changed=true;}}}
     // bombs that fell and are now supported explode
     let exploded=false;
-    for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(o.t!=='B'||!objFell[o.id]||!sup[i+1])continue;
-      exploded=true;events.push({type:'explode',x:o.x,y:o.y});
-      const below=K(o.x,o.y+1);if(lv.walls.has(below)&&!goneSet.has(below)){gone.push(below);goneSet.add(below);}
-      if(snake.some(([x,y])=>Math.abs(x-o.x)+Math.abs(y-o.y)===1))dead=true;
-      objs.splice(i,1);}
+    for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(o.t!=='B'||!objFell[o.id]||!sup[i+1])continue;exploded=true;blow(i);}
     if(exploded)continue;
     let any=false;for(let i=0;i<n;i++)if(!sup[i]){any=true;break;}
     if(!any)break;
@@ -61,7 +62,12 @@ function stepState(lv,st,dx,dy){
     for(let i=0;i<objs.length;i++)if(!sup[i+1]){objs[i].y++;objFell[objs[i].id]=(objFell[objs[i].id]||0)+1;}
     objs=objs.filter(o=>o.y<lv.H);
     if(onSpike()){dead=true;break;}
-  }
+  }};
+  settle();
+  // button: the head resting on it sets off every bomb where it sits, then everything settles again
+  if(!dead&&lv.buttons&&lv.buttons.has(K(snake[0][0],snake[0][1]))&&objs.some(o=>o.t==='B')){let any=false;
+    for(let i=objs.length-1;i>=0;i--)if(objs[i].t==='B'){blow(i);events[events.length-1].button=true;any=true;}
+    if(any&&!dead)settle();}
   const win=!dead&&apples.length===0&&(!lv.exit||(snake[0][0]===lv.exit[0]&&snake[0][1]===lv.exit[1]));
   return {state:{snake,apples,objs,gone},ate,dead,win,fell,events};
 }

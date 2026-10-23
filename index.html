@@ -205,7 +205,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
   <div class="stack">
     <button class="go" id="playBtn" disabled style="min-height:84px;border-radius:24px;font-size:36px;flex-direction:column;gap:2px">Play<small id="playSub">Add a player to start</small></button>
     <button class="cream" id="lbBtn" style="min-height:60px;border-radius:20px;font-family:var(--display);font-weight:400;font-size:22px;gap:10px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b07a10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span>Family Board</span></button>
-    <button class="cream" id="bigBtn" hidden style="min-height:48px">Big boards (test map)</button>
+    <button class="cream" id="bigBtn" hidden style="min-height:48px">Test map: big boards and buttons</button>
   </div>
 </section>
 
@@ -407,14 +407,40 @@ const LEVELS_MAIN=[
 {"name":"Thorny Shelf","rows":["..............","...A..........","...###....A...","..........XX#.","#.....A.E###..","...######A....",".#.....##.....",".##....##A....",".#.....###....",".#.#...##.....","oSAX....#..C..","########..####"],"par":67},
 {"name":"Harvest Home","rows":["..............","...A..........","...###....A...","...........X.#","......A.E###..","...######A....",".#.....##.....",".##....##A....",".#.....###....",".#.#...##.....","oSAX....#..C..","########..####"],"par":72},
 {"name":"The Big Drop","rows":[".....B.A.#....",".....###.#....","....#....##...","....#....##...","A.........##..","###......###..","........#.#A.E",".....A...X...#","....######....","..............",".C..So..AXX...","##############"],"par":112,"bonus":true}
-],LEVELS_BIG=[]; // LEVELS_BIG: the separate test map of bigger boards
+],LEVELS_BIG=[
+{"name":"Red Button","rows":["..............","..............","..............","..............","..............","..............","..............","..............","..T..oS.B.....","##############",".E..A.........","##############"],"par":20,"tip":"Step on the red button to set the bomb off from a distance. It blows the rock beneath it."},
+{"name":"Fuse Box","rows":["..............","..XX.A........",".###.###....#.","..T.E...#...#.","..###.A...X.#.",".....######.#.",".#............",".#A...........",".#####........",".###..........",".#....So.AB...","##############"],"par":44,"tip":"A button level. Set the bomb off from a safe distance."},
+{"name":"Blast Switch","rows":["..............","......A.....B.","...#..#...###.","...#..#....#..","..##.X.#......","..##.####.....","#.............","......#.......",".....A#XX.....","E..######.....","#....SoATAC...","##############"],"par":62},
+{"name":"Plunger","rows":["....A......A..","...###..#C....","..T#....##..A.","..#.....##....","...A....##.A..","#####...#E....",".....X..###..#","#....#BA.#....",".....#####..#.","........#A..#.","...#.CA.SoX.#.","####.#########"],"par":72},
+{"name":"Trip Wire","rows":["..........#...","..........#..#","..........#...",".....A....#...","......#A..#A..",".........#.#..",".....EA....#..",".##.###.......",".#....CB......",".#.######.#...",".#.....AoS..TC","####..########"],"par":82},
+{"name":"Tall Hedge 14x16","rows":["..............","......A.......","..............",".......XX.....","..A#...####...","..........#.#.","..........#.#.",".....#....#...",".......#......","..###.##......","#......#....E#",".......#...A##",".........#####","..A..........#",".X..oS..A.C...","##############"],"par":63,"tip":"A 14x16 board. Everything else is the same."},
+{"name":"High Trellis 14x16","rows":["..............","..#.....A.....",".........#....","..............","..............","..XXXA........",".#######....#.","........#...#.",".#.##.....X.#.",".A...######.#.",".#............",".#A.E.........",".#####........",".###..........",".#...So..A.C..","##############"],"par":68},
+{"name":"Long Ladder 14x16","rows":["..............","......A.......","..............",".......XX.....","..A....####...","..........#.#.","..........#.#.",".....##C..##..",".......#...A..","..###.##......","#......#....E#",".......#...A##",".........#####",".............#",".X..oS..A.C...","##############"],"par":67},
+{"name":"Steeple 14x16","rows":["..............","...X..........","...#.#........","..............","..............","...........A..","...#..#...###.","#..#..#.......","..##..#EA.....","..#######.A...","#...#.X.......","......#.......","...AXX#.......","...######.....","#..So..A....C.","##############"],"par":93},
+{"name":"Wide Meadow 16x14","rows":["................",".............A..","................",".#..X...........",".#.##...........",".#....X..A......","......####......","......#....A....","......#....###..","......A.X.......","......####...E..",".............#..",".....SoCA..X.XXX","#.##############"],"par":43,"tip":"A 16x14 board. Everything else is the same."},
+{"name":"Broad Barn 16x14","rows":["................","..........C.....","..A....####.#...",".#........#.#...","..........#..#..",".....#....#.#...",".......#...A....","..###.##........","#......#....E#..",".......#...A##..",".........#####..",".............#..",".X.oS..CA.....XX","################"],"par":63},
+{"name":"Long Wall 16x14","rows":["................",".........E......","..A....#####....","....#.....#.#...","..........#.#...",".....##...#.#...","......X#..A.....","..######........","#......#.....#..",".......#....##C.",".........####.#.","......#......#A.",".X.oS...A.C..C..","################"],"par":63},
+{"name":"Far Field 16x14","rows":["................",".........E......","..A....####.#...","..........#.#...","..........#.#...",".....##...#.#...","......X#...A....","..######........","#......#.....#..",".......#....##..",".........####.#.","......#......#A.",".XoS....A.C..C..","################"],"par":66},
+{"name":"The Tower 14x20","rows":["..............","..............","..............","..............","............#.","........A.....","..............","............#.",".............#","..XXX.........",".#######....#.","....E...#...#.","..###.A...X.#.",".....######.#.",".#............",".#A...........",".#####........",".###..........",".#....So.AC...","##############"],"par":52,"tip":"A 14x20 board. Everything else is the same."},
+{"name":"Chimney Stack 14x20","rows":["..............","..............","..............","..............","............#.","........A.....","..............","...A........#.",".............#","...XX.........",".#######....#.","........#...#.","..###EA...X.#.",".....######.#.",".##...........",".#......#.....",".#####........",".###..........",".#...So..AC...","##############"],"par":72},
+{"name":"Sky Ladder 14x20","rows":["..............","..............","..............","..............","............#.","........A.....","..............","...A........#.",".............#","...XX.........",".#######....#.","...E....#...#.","..###.A...X.#.",".....######.#.",".#............",".#............",".#####........",".###..........",".#...So..AC...","##############"],"par":75},
+{"name":"Beanstalk 14x20","rows":["...........A..","..............","..............","............B.","...........#..","........A.....","..............","#..A........#.",".............#","...XX.........",".#######....#.","........#...#.","..###EA...X.#.",".....######.#.",".##...........",".#......##....",".#####........",".###..........",".#...So..AC...","##############"],"par":91},
+{"name":"Big Barn 18x16","rows":["..................","..................","..................","..................","...#..............","..##..............","..##..............","..##......#.......","......E.AC##......","....#######....#..","..A......A.#......","..###...#..#......",".......A#.........",".......##.........",".......oS.C..#XXXX","###########.######"],"par":51,"tip":"A 18x16 board. Everything else is the same."},
+{"name":"Great Hall 18x16","rows":["..................","..................","..................","..................","...#..............","..##..............","..##.......A......","..##......#.......","......E.A.##......","....#######.......","..A..#...A.#......","..###...#..#......",".......A#.........",".......##.........","....C..oS....#XXXX","###########.######"],"par":59},
+{"name":"Wide Acre 18x16","rows":["..................","........#.........","A.................","..................","..................","..................","..................",".........A........","##..........A.....",".........B........","......######.#....","......#..#.#......",".....EA..#.###..#.","#.######.#.#......",".C#...ACASo.XXX...","##################"],"par":57},
+{"name":"Open Orchard 18x16","rows":["..................","..................","..................","..................","..A....#.##.#.....","..........#.#.....","..........#.#.....",".....##...#.#.....","....A..#...A......","E.#.####..........","#.....##.....#....","......#....A##....",".........#####....","..A..........#....",".XoS......C....XXX","##################"],"par":61},
+{"name":"The Estate 20x18","rows":["....................","....................","....................","....................","....................","....................","....................","...A.#..............","..###.....#.#.......","..........###.......","..........##........","....####.A#X........","...#E..A.###........","....#.A.............","#######.............","....#.....#.........","So..C..A..#...XXX...","##########..########"],"par":54,"tip":"A 20x18 board. Everything else is the same."},
+{"name":"Whole Valley 20x18","rows":["....................","....................","....................","....................","....................","..........E.........","..A....####.#.......","..........#.#.......","......A...#.#.......",".....##...#.#.......","....A..#...A........","..######............","#......#.....#......",".......#...A##......",".........#####......",".............#......",".X.oS...A.C.....XX..","####################"],"par":64},
+{"name":"Grand Orchard 20x18","rows":["....................","....................","....................","....................","....................","....................","...............A....",".A....####..........",".##.#...A...........",".#.......#..........","...E.A...#..........",".#####..............","..AA...#.#..........","#......#.#..........","..##.....#..X.......",".#.#.....#..#.......","..X#AC.So...#....XX.","####################"],"par":77},
+{"name":"Far Horizon 20x18","rows":["....................","....................",".....A..............","....................","....................","....................","A...........E.......",".....A.....##.......","..####.....A........","....#.......XX......","...#.....#####......",".......#............",".#######............",".A.....#............","##.#...#A...........","...#..####..........",".A.#..oS....C.XXX...","####################"],"par":80}
+]; // LEVELS_BIG: the separate test map of bigger boards
 let LEVELS=LEVELS_MAIN,MAPID='main';
 const LEVEL_MAPS={"v5":{"0":2,"3":5,"4":10,"5":11,"8":14,"9":12,"16":18,"19":20,"20":24,"22":23,"24":25,"25":28,"26":29,"27":26,"28":31,"29":35,"30":34},"v6":{"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":13,"11":15,"12":18,"13":19,"14":24,"15":26,"16":29,"17":32,"18":36,"19":43,"20":45,"21":49,"22":55,"23":57,"24":67,"25":84,"26":89,"27":96,"28":103,"29":107,"30":124,"31":126,"32":127,"33":140,"34":148,"35":149}};
 const PUB=false;
 const SITE='orchard-climber.vercel.app';
 let MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; clearing the last of them is the finale
 const bestOf=p=>MAPID==='main'?(p.best||(p.best={})):(p.bestBig||(p.bestBig={})); // progress per map; only the main map reaches the leaderboard
-function setMap(id){MAPID=id;LEVELS=id==='big'?LEVELS_BIG:LEVELS_MAIN;MAIN=LEVELS.filter(l=>!l.bonus).length;$('lvTitle').textContent=id==='big'?'Big boards':'The Orchard';$('toStart').lastChild.textContent=id==='big'?'Start':'Tutorials';}
+function setMap(id){MAPID=id;LEVELS=id==='big'?LEVELS_BIG:LEVELS_MAIN;MAIN=LEVELS.filter(l=>!l.bonus).length;$('lvTitle').textContent=id==='big'?'Test map':'The Orchard';$('toStart').lastChild.textContent=id==='big'?'Start':'Tutorials';}
 
 // ---------- persistence ----------
 const KEY='orchard.v1';
@@ -552,20 +578,21 @@ addEventListener('resize',()=>{if(!$('levels').hidden)renderLevels();});
 
 // ---------- rules ----------
 // Orchard Climber rules v2. Shared verbatim by the game page (pasted in by build.py) and the node tools.
-// Tiles: # rock  A apple  C crate  B bomb  X spikes  E exit  S head  o body  . empty
+// Tiles: # rock  A apple  C crate  B bomb  X spikes  E exit  S head  o body  T button  . empty
+// Button: when the head comes to rest on it, every bomb on the board explodes where it sits (same blast as a landing bomb).
 // A move: head steps one cell (pushing a crate/bomb if one is there), then gravity settles everything.
 // Gravity: the snake and every object fall together unless resting on rock or on something resting on rock.
 // A bomb that lands after falling explodes: it vanishes, destroys the rock directly beneath it, and kills the snake if a segment is next to it.
 // Spikes kill the snake if any segment ends up on them. Objects can sit on spikes and cover them.
 // Win: all apples eaten and (if the level has an exit) the head is on the exit.
 function parseLevel(lv){
-  const rows=lv.rows,H=rows.length,W=rows[0].length,walls=new Set(),spikes=new Set(),apples=[],objs=[];let head=null,body=[],exit=null,oid=0;
+  const rows=lv.rows,H=rows.length,W=rows[0].length,walls=new Set(),spikes=new Set(),buttons=new Set(),apples=[],objs=[];let head=null,body=[],exit=null,oid=0;
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const c=rows[y][x];
     if(c==='#')walls.add(x+','+y);else if(c==='A')apples.push([x,y]);else if(c==='S')head=[x,y];else if(c==='o')body.push([x,y]);
-    else if(c==='C'||c==='B')objs.push({t:c,x,y,id:oid++});else if(c==='X')spikes.add(x+','+y);else if(c==='E')exit=[x,y];}
+    else if(c==='C'||c==='B')objs.push({t:c,x,y,id:oid++});else if(c==='X')spikes.add(x+','+y);else if(c==='T')buttons.add(x+','+y);else if(c==='E')exit=[x,y];}
   const snake=[head];let rem=body.slice();
   while(rem.length){const [hx,hy]=snake[snake.length-1];const i=rem.findIndex(([x,y])=>Math.abs(x-hx)+Math.abs(y-hy)===1);if(i<0)break;snake.push(rem[i]);rem.splice(i,1);}
-  return {W,H,walls,spikes,exit,start:{snake,apples,objs,gone:[]}};
+  return {W,H,walls,spikes,buttons,exit,start:{snake,apples,objs,gone:[]}};
 }
 const K=(x,y)=>x+','+y;
 function stateKey(st){let k='';for(const p of st.snake)k+=p[0]+','+p[1]+';';k+='|';if(st.apples.length)k+=st.apples.map(p=>p[0]+','+p[1]).sort().join(';');k+='|';if(st.objs.length)k+=st.objs.map(o=>o.t+o.x+','+o.y).sort().join(';');k+='|';if(st.gone.length)k+=st.gone.slice().sort().join(';');return k;}
@@ -592,7 +619,11 @@ function stepState(lv,st,dx,dy){
   const onSpike=()=>snake.some(([x,y])=>lv.spikes.has(K(x,y)));
   if(onSpike())dead=true;
   const goneSet=new Set(gone);const rock=(x,y)=>lv.walls.has(K(x,y))&&!goneSet.has(K(x,y));
-  for(let iter=0;iter<lv.H*3&&!dead;iter++){
+  const blow=i=>{const o=objs[i];events.push({type:'explode',x:o.x,y:o.y});
+    const below=K(o.x,o.y+1);if(lv.walls.has(below)&&!goneSet.has(below)){gone.push(below);goneSet.add(below);}
+    if(snake.some(([x,y])=>Math.abs(x-o.x)+Math.abs(y-o.y)===1))dead=true;
+    objs.splice(i,1);};
+  const settle=()=>{for(let iter=0;iter<lv.H*3&&!dead;iter++){
     // support fixpoint. index 0 = snake, i+1 = objs[i]
     const n=objs.length+1,sup=new Uint8Array(n);const owner=new Map();
     for(const [x,y] of snake)owner.set(K(x,y),0);objs.forEach((o,i)=>owner.set(K(o.x,o.y),i+1));
@@ -602,11 +633,7 @@ function stepState(lv,st,dx,dy){
       for(let i=0;i<objs.length;i++){if(sup[i+1])continue;const o=objs[i];if(o.y+1>=lv.H)continue;if(rock(o.x,o.y+1)){sup[i+1]=1;changed=true;continue;}const w=owner.get(K(o.x,o.y+1));if(w!=null&&w!==i+1&&sup[w]){sup[i+1]=1;changed=true;}}}
     // bombs that fell and are now supported explode
     let exploded=false;
-    for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(o.t!=='B'||!objFell[o.id]||!sup[i+1])continue;
-      exploded=true;events.push({type:'explode',x:o.x,y:o.y});
-      const below=K(o.x,o.y+1);if(lv.walls.has(below)&&!goneSet.has(below)){gone.push(below);goneSet.add(below);}
-      if(snake.some(([x,y])=>Math.abs(x-o.x)+Math.abs(y-o.y)===1))dead=true;
-      objs.splice(i,1);}
+    for(let i=objs.length-1;i>=0;i--){const o=objs[i];if(o.t!=='B'||!objFell[o.id]||!sup[i+1])continue;exploded=true;blow(i);}
     if(exploded)continue;
     let any=false;for(let i=0;i<n;i++)if(!sup[i]){any=true;break;}
     if(!any)break;
@@ -614,7 +641,12 @@ function stepState(lv,st,dx,dy){
     for(let i=0;i<objs.length;i++)if(!sup[i+1]){objs[i].y++;objFell[objs[i].id]=(objFell[objs[i].id]||0)+1;}
     objs=objs.filter(o=>o.y<lv.H);
     if(onSpike()){dead=true;break;}
-  }
+  }};
+  settle();
+  // button: the head resting on it sets off every bomb where it sits, then everything settles again
+  if(!dead&&lv.buttons&&lv.buttons.has(K(snake[0][0],snake[0][1]))&&objs.some(o=>o.t==='B')){let any=false;
+    for(let i=objs.length-1;i>=0;i--)if(objs[i].t==='B'){blow(i);events[events.length-1].button=true;any=true;}
+    if(any&&!dead)settle();}
   const win=!dead&&apples.length===0&&(!lv.exit||(snake[0][0]===lv.exit[0]&&snake[0][1]===lv.exit[1]));
   return {state:{snake,apples,objs,gone},ate,dead,win,fell,events};
 }
@@ -680,7 +712,7 @@ function move(d){if(dead||anim||!$('overlay').hidden)return;$('padHint').hidden=
   if(r.dead)setTimeout(()=>{SFX.die();buzz(80);},dur);
   else if(r.win)setTimeout(()=>{SFX.win();buzz([30,40,30]);},dur);
   else if(st.apples.length===0&&lv.exit&&from.apples.length>0){SFX.door();doorAt=performance.now();}
-  if(r.dead){dead=true;deaths++;const why=r.events.some(e=>e.type==='explode')?'Too close when the bomb went off.':(st.snake.some(([x,y])=>lv.spikes.has(x+','+y))?'Ouch. Straight onto the spikes.':'The snake fell off the world.');
+  if(r.dead){dead=true;deaths++;const why=r.events.some(e=>e.type==='explode'&&e.button)?'You pressed the button while standing too close.':r.events.some(e=>e.type==='explode')?'Too close when the bomb went off.':(st.snake.some(([x,y])=>lv.spikes.has(x+','+y))?'Ouch. Straight onto the spikes.':'The snake fell off the world.');
     setTimeout(()=>{if(deaths===1)showSplat(why);else{$('wrap').classList.remove('shake');void $('wrap').offsetWidth;$('wrap').classList.add('shake');SFX.rewind();undo();toast('Splat! Rewound one move.');}},520);}
   else if(r.win)setTimeout(levelClear,380);
   else if(st.apples.length===0&&lv.exit&&from.apples.length>0)toast('All apples eaten. Now reach the door.');}
@@ -688,7 +720,8 @@ function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
   if(p){const b=bestOf(p),prev=b[li];if(prev==null||moves<prev){b[li]=moves;save();if(MAPID==='main')lbPush(p,li,moves);note=prev==null?'':`New best (was ${prev}). `;}else note=`Your best is ${prev}. `;}
   const t=tier(moves,L.par),last=li===MAIN-1;
   if(last&&!L.bonus&&MAPID==='main')return showFinale(p,t,note);
-  const line=t==='gold'?(moves<L.par?`${L.par-moves} under par. Gold apple, and it counts on the Family Board.`:'Matched par. Gold apple, and it counts on the Family Board.'):t==='close'?`${moves-L.par} over par. Green apple. Match par (${L.par}) for gold.`:`Cleared. Match par (${L.par}) to earn the gold apple.`;
+  let line=t==='gold'?(moves<L.par?`${L.par-moves} under par. Gold apple, and it counts on the Family Board.`:'Matched par. Gold apple, and it counts on the Family Board.'):t==='close'?`${moves-L.par} over par. Green apple. Match par (${L.par}) for gold.`:`Cleared. Match par (${L.par}) to earn the gold apple.`;
+  if(MAPID!=='main')line=line.replace(', and it counts on the Family Board','')+' Test map: not on the board.';
   const next=li+1<LEVELS.length?li+1:null;
   showCard('win',`<div class="medal ${t==='gold'?'':t==='close'?'close':'pale'}">${APPLE_SVG(58)}</div><h2>${t==='gold'?(moves<L.par?'Under par!':'Level clear!'):'Level clear!'}</h2>
     <div class="tiles"><div><b>${moves}</b>moves</div><div class="par"><b>${L.par}</b>par</div></div><p>${esc(note+line)}</p>
@@ -733,7 +766,7 @@ function hintWorker(){if(hintW)return hintW;
 function hintPath(lv,st,cap){const seen=new Set([stateKey(st)]);let q=[{st,path:''}];
   while(q.length){const nq=[];for(const n of q){for(const [dx,dy,c] of DIRS){const r=stepState(lv,n.st,dx,dy);if(!r||r.dead)continue;
     if(r.win)return n.path+c;const k=stateKey(r.state);if(seen.has(k))continue;seen.add(k);if(seen.size>cap)return null;nq.push({st:r.state,path:n.path+c});}}q=nq;}return null;}
-onmessage=e=>{const {id,lv,st}=e.data;lv.walls=new Set(lv.walls);lv.spikes=new Set(lv.spikes);const path=hintPath(lv,st,500000);let target=null;
+onmessage=e=>{const {id,lv,st}=e.data;lv.walls=new Set(lv.walls);lv.spikes=new Set(lv.spikes);lv.buttons=new Set(lv.buttons||[]);const path=hintPath(lv,st,500000);let target=null;
   if(path){let s=st;for(const c of path){const [dx,dy]=DIRS.find(d=>d[2]===c);const r=stepState(lv,s,dx,dy);if(r.ate){target=[s.snake[0][0]+dx,s.snake[0][1]+dy];break;}s=r.state;}
     if(!target&&lv.exit)target=lv.exit;}
   postMessage({id,path,target});};`;
@@ -747,7 +780,7 @@ function askHint(){if(dead||anim||!$('overlay').hidden)return;const id=stateKey(
   const w=hintWorker();
   if(!w){toast('Thinking…');setTimeout(()=>{const h=hintMove(lv,st);hintCache[id]={dir:h,target:null};applyHint(id);},30);return;}
   if(hintBusy)return;hintBusy=true;$('hintBtn').disabled=true;toast('Thinking…',4000);
-  w.postMessage({id,lv:{...lv,walls:[...lv.walls],spikes:[...lv.spikes]},st});}
+  w.postMessage({id,lv:{...lv,walls:[...lv.walls],spikes:[...lv.spikes],buttons:[...(lv.buttons||[])]},st});}
 function applyHint(id){if(stateKey(st)!==id)return;const h=hintCache[id];
   if(!h.dir){toast('No way out from here. Undo a few moves.');return;}
   if(h.target&&!hintApple&&!hintDir){hintApple=h.target;hintT=performance.now();pen+=1;refreshStats();toast(st.apples.length?'Go for the marked apple (−1). Tap Hint again for the move (−2).':'Head for the door (−1). Tap Hint again for the move (−2).',2600);draw();return;}
@@ -769,6 +802,8 @@ const SPR_SVG={
   spikes:'<rect x="1" y="33" width="38" height="7" rx="2" fill="#6e7680"/><path d="M2 34L8 14L14 34ZM14 34L20 10L26 34ZM26 34L32 14L38 34Z" fill="#d3d8dd" stroke="#4a525c" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 15L11 33M20 11L23 33M32 15L35 33" stroke="#9aa2ab" stroke-width="1.5"/>',
   doorShut:'<path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#8a5a2b"/><path d="M15.5 7.5V40M24.5 7.5V40" stroke="#6b4422" stroke-width="1.5"/><path d="M17.5 23v-2.5a2.5 2.5 0 0 1 5 0V23" stroke="#e3a51f" stroke-width="2" fill="none"/><rect x="16" y="23" width="8" height="7" rx="1.5" fill="#e3a51f"/>',
   doorOpen:'<circle cx="20" cy="24" r="22" fill="#ffe9a8" opacity="0.45"/><path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#fff4c2"/><path d="M10 40V22a10 10 0 0 1 20 0v18z" fill="#ffe08a"/><path d="M7 19L2 22V40H7Z" fill="#8a5a2b" stroke="#6b4422" stroke-width="1"/><path d="M20 12l1.2 3 3 1.2-3 1.2L20 20.4l-1.2-3-3-1.2 3-1.2z" fill="#ffffff"/>',
+  button:'<rect x="4" y="31" width="32" height="8" rx="3" fill="#6e7680"/><rect x="8" y="27" width="24" height="8" rx="4" fill="#9aa2ab"/><ellipse cx="20" cy="26" rx="10" ry="6" fill="#a8301f"/><ellipse cx="20" cy="23" rx="10" ry="6" fill="#e0493a"/><ellipse cx="17" cy="21" rx="4" ry="2" fill="#f6a497"/>',
+  buttonDown:'<rect x="4" y="31" width="32" height="8" rx="3" fill="#6e7680"/><rect x="8" y="27" width="24" height="8" rx="4" fill="#9aa2ab"/><ellipse cx="20" cy="28" rx="10" ry="5" fill="#a8301f"/><ellipse cx="20" cy="27" rx="10" ry="5" fill="#e0493a"/>',
   rubble:'<rect x="3" y="30" width="12" height="8" rx="3" fill="#8f7f69"/><rect x="16" y="32" width="9" height="6" rx="2.5" fill="#a8977e"/><rect x="26" y="29" width="11" height="9" rx="3" fill="#9e8d74"/><rect x="11" y="25" width="7" height="6" rx="2" fill="#a8977e"/><path d="M4 38h32" stroke="#6f604d" stroke-width="2" stroke-linecap="round"/>',
   boom:'<path d="M20 -2l5 10 11-4-4 11 10 5-10 5 4 11-11-4-5 10-5-10-11 4 4-11-10-5 10-5-4-11 11 4z" fill="#ff8a2b"/><path d="M20 6l3 7 7-3-3 7 7 3-7 3 3 7-7-3-3 7-3-7-7 3 3-7-7-3 7-3-3-7 7 3z" fill="#ffd34d"/><circle cx="20" cy="20" r="5" fill="#fff4c2"/>'
 };
@@ -789,7 +824,9 @@ function cloud(x,y,s){ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.a
 // blast preview: where a bomb that is not resting on rock would land, and the cells the blast reaches
 function blastPreview(gone){const out=[];const rock=(x,y)=>lv.walls.has(x+','+y)&&!gone.has(x+','+y);const [hx,hy]=st.snake[0];
   const drop=(o,x,y)=>{let ly=y;while(ly+1<lv.H&&!rock(x,ly+1)&&!st.objs.some(q=>q!==o&&q.x===x&&q.y===ly+1))ly++;return ly+1>=lv.H?null:ly;};
+  const btnNear=lv.buttons&&[...lv.buttons].some(k=>{const [bx,by]=k.split(',').map(Number);return Math.abs(bx-hx)+Math.abs(by-hy)===1;});
   for(const o of st.objs){if(o.t!=='B')continue;
+    if(btnNear){out.push({x:o.x,y:o.y});continue;}
     const ly=drop(o,o.x,o.y);if(ly!=null&&ly>o.y){out.push({x:o.x,y:ly});continue;} // resting on the snake or a crate: shows where it lands when that moves
     const dx=o.x-hx,dy=o.y-hy;if(Math.abs(dx)+Math.abs(dy)!==1)continue; // head beside it: the next swipe that way pushes it
     const bx=o.x+dx,by=o.y+dy;if(bx<0||bx>=lv.W||by<0||by>=lv.H||rock(bx,by)||st.snake.some(([x,y])=>x===bx&&y===by)||st.objs.some(q=>q.x===bx&&q.y===by)||st.apples.some(([x,y])=>x===bx&&y===by)||(lv.exit&&lv.exit[0]===bx&&lv.exit[1]===by))continue;
@@ -815,6 +852,7 @@ function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now()
   if(!anim){for(const b of blastPreview(gone)){ctx.fillStyle='rgba(224,73,58,.22)';for(const [dx,dy] of [[1,0],[-1,0],[0,-1],[0,1]]){const x=b.x+dx,y=b.y+dy;if(x<0||x>=W||y<0||y>=H||(lv.walls.has(x+','+y)&&!gone.has(x+','+y)))continue;rr(x*CELL+4,y*CELL+4,CELL-8,CELL-8,8);ctx.fill();}
     ctx.strokeStyle='rgba(224,73,58,.55)';ctx.lineWidth=2;ctx.setLineDash([4,4]);rr(b.x*CELL+3,b.y*CELL+3,CELL-6,CELL-6,8);ctx.stroke();ctx.setLineDash([]);}}
   for(const k of lv.spikes){const [x,y]=k.split(',').map(Number);if(!st.objs.some(o=>o.x===x&&o.y===y))drawSpikes(x,y);}
+  if(lv.buttons)for(const k of lv.buttons){const [x,y]=k.split(',').map(Number);const on=!anim&&st.snake[0][0]===x&&st.snake[0][1]===y;spr(on?'buttonDown':'button',x*CELL,y*CELL);}
   if(lv.exit){const open=st.apples.length===0,k=Math.min(1,(now-doorAt)/300);if(open&&k<1)more=true;drawExit(lv.exit[0],lv.exit[1],open,k);}
   for(const [x,y] of st.apples)spr('apple',x*CELL,y*CELL);
   // hint stage 1: a pulsing ring round the target apple (or the door)
