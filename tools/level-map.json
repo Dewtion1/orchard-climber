@@ -1,0 +1,15 @@
+{
+ "0": 2,
+ "3": 5,
+ "5": 10,
+ "8": 13,
+ "9": 11,
+ "16": 15,
+ "19": 16,
+ "25": 19,
+ "27": 17,
+ "28": 20,
+ "29": 22,
+ "30": 21,
+ "_note": "Old index (0-based, tools/levels-old.json) -> new index (tools/levels50.json) for levels whose rows are byte-identical. Dropped (replaced by new generated levels): 4 Trellis, 6 Rope Bridge, 7 The Chimney, 10 Teetering, 11 Barn Loft, 12 Thin Ice, 13 Long Way Round, 14 Orchard Wall, 15 Last Light, 17 Hay Bales, 18 Cold Store, 20 Lantern Hook, 21 Sawdust, 22 Press House, 23 Ridge Walk, 24 Cider Run, 26 Night Pick. Re-made by hand (same name, new board): 1 Mind the Spikes (re-made, now index 3); 2 Exit Stage Right (re-made, now index 4). New hand-made tutorials Windfall and Low Branches were inserted at 0 and 1; bridging levels at 6-9; The Big Drop is now a bonus level at the end."
+}

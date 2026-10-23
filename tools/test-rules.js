@@ -1,9 +1,20 @@
 const {parseLevel,stepState,solve}=require('./rules.js');
 const OLD=require('./levels50.json');
 let fails=0;const ok=(c,m)=>{if(!c){fails++;console.log('FAIL',m);}};
-// 1. old levels: new rules give the same par as before
-for(const L of OLD.slice(0,4)){const r=solve(parseLevel(L));ok(r&&r.path.length===L.par,`${L.name} par ${L.par} got ${r&&r.path.length}`);}
-console.log('old levels checked');
+// 1. tutorials and bridging levels (index < 10): the stored par is exact under these rules
+for(const L of OLD.slice(0,10)){const r=solve(parseLevel(L),700000);ok(r&&r.path.length===L.par,`${L.name} par ${L.par} got ${r&&r.path.length}`);}
+console.log('tutorial and bridge levels checked');
+// 1b. each tutorial teaches its mechanic
+{const byName=Object.fromEntries(OLD.map(l=>[l.name,l]));const par=rows=>{const r=solve(parseLevel({rows}),700000);return r?r.path.length:null;};
+ const strip=(l,re)=>l.rows.map(r=>r.replace(re,'.'));
+ const sp=byName['Mind the Spikes'];ok(sp,'Mind the Spikes present');
+ if(sp){ok(par(strip(sp,/X/g))!==sp.par,'Mind the Spikes: removing the spikes should change par');ok(par(strip(sp,/C/g))==null,'Mind the Spikes: unsolvable without the crate');}
+ const ex=byName['Exit Stage Right'];ok(ex,'Exit Stage Right present');
+ if(ex){ok(par(strip(ex,/C/g))==null,'Exit Stage Right: unsolvable without the crate');ok(par(strip(ex,/E/g))!==ex.par,'Exit Stage Right: removing the door should change par');}
+ const fl=byName['Fuse Lit'];ok(fl,'Fuse Lit present');
+ if(fl)ok(par(strip(fl,/B/g))==null,'Fuse Lit: unsolvable without the bomb');
+ const cr=byName['Crate Expectations'];if(cr)ok(par(strip(cr,/C/g))==null,'Crate Expectations: unsolvable without the crate');
+ console.log('tutorial mechanics checked');}
 // 2. crate: push off ledge, stand on it
 const crate=parseLevel({rows:[
 "...A....",
