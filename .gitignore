@@ -7,3 +7,5 @@ tools/review.json
 tools/review-*.err
 tools/levels-old.json
 tools/review-*.out
+tools/run3-*.log
+tools/pool3-*.json

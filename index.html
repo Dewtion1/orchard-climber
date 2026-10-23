@@ -294,7 +294,7 @@ const LEVELS=[
 {"name":"The Big Drop","rows":[".....B.A.#....",".....###.#....","....#....##...","....#....##...","A.........##..","###......###..","........#.#A.E",".....A...X...#","....######....","..............",".C..So..AXX...","##############"],"par":112,"bonus":true}
 ]
 ;
-const LEVEL_MAP={"0":2,"3":5,"4":10,"5":11,"8":14,"9":12,"16":18,"19":20,"20":24,"22":23,"24":25,"25":28,"26":29,"27":26,"28":31,"29":35,"30":34};
+const LEVEL_MAPS={"v5":{"0":2,"3":5,"4":10,"5":11,"8":14,"9":12,"16":18,"19":20,"20":24,"22":23,"24":25,"25":28,"26":29,"27":26,"28":31,"29":35,"30":34},"v6":{"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":10,"11":11,"12":12,"13":13,"14":14,"15":15,"16":16,"17":17,"18":18,"19":19,"20":20,"21":21,"22":22,"23":23,"24":24,"25":25,"26":26,"27":27,"28":28,"29":29,"30":30,"31":31,"32":32,"33":33,"34":34,"35":35}};
 const PUB=false;
 const SITE='orchard-climber.vercel.app';
 const MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; clearing the last of them is the finale
@@ -303,15 +303,17 @@ const MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; cleari
 const KEY='orchard.v1';
 let S={players:[],current:null};
 try{const raw=localStorage.getItem(KEY);if(raw)S=JSON.parse(raw);}catch(e){}
-const LEVELS_V3='2026-10-23T12:00:00Z',LEVELS_V4='2026-10-23T13:00:00Z',LEVELS_V5='2026-10-23T17:00:00Z';
-// v3: 19 original levels dropped. v4: old 20-50 became 1-31. v5: the set was reworked and reordered; LEVEL_MAP maps v4 indices to v5 indices for the levels that survived unchanged.
-function remapRow(x){if(x.updated_at>=LEVELS_V5)return x;let l=x.level;
-  if(x.updated_at<LEVELS_V4){if(x.updated_at>=LEVELS_V3&&l>=19)l-=19;else return null;}
-  const m=LEVEL_MAP[l];return m==null?null:{...x,level:m};}
+const LEVELS_V3='2026-10-23T12:00:00Z',LEVELS_V4='2026-10-23T13:00:00Z',LEVELS_V5='2026-10-23T17:00:00Z',LEVELS_V6='2026-10-23T18:45:00Z';
+// v3: 19 original levels dropped. v4: old 20-50 became 1-31. v5: the set was reworked and reordered (LEVEL_MAPS.v5: v4 index -> v5 index for the survivors).
+// v6: the set grew to 150 and was re-sorted (LEVEL_MAPS.v6: v5 index -> v6 index; every v5 level survived).
+function remapRow(x){if(x.updated_at>=LEVELS_V6)return x;let l=x.level;
+  if(x.updated_at<LEVELS_V5){if(x.updated_at<LEVELS_V4){if(x.updated_at>=LEVELS_V3&&l>=19)l-=19;else return null;}l=LEVEL_MAPS.v5[l];if(l==null)return null;}
+  l=LEVEL_MAPS.v6[l];return l==null?null:{...x,level:l};}
 if(!S.v2){for(const p of S.players)for(const k of Object.keys(p.best||{}))if(+k>=5)delete p.best[k];S.v2=true;}
 if(!S.v3){for(const p of S.players)for(const k of Object.keys(p.best||{}))if(+k>=19)delete p.best[k];S.v3=true;}
 if(!S.v4){for(const p of S.players){const nb={};for(const k of Object.keys(p.best||{}))if(+k>=19)nb[+k-19]=p.best[k];p.best=nb;}S.v4=true;}
-if(!S.v5){for(const p of S.players){const nb={};for(const k of Object.keys(p.best||{})){const m=LEVEL_MAP[k];if(m!=null)nb[m]=p.best[k];}p.best=nb;}S.v5=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+if(!S.v5){for(const p of S.players){const nb={};for(const k of Object.keys(p.best||{})){const m=LEVEL_MAPS.v5[k];if(m!=null)nb[m]=p.best[k];}p.best=nb;}S.v5=true;}
+if(!S.v6){for(const p of S.players){const nb={};for(const k of Object.keys(p.best||{})){const m=LEVEL_MAPS.v6[k];if(m!=null)nb[m]=p.best[k];}p.best=nb;}S.v6=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const cur=()=>S.players.find(p=>p.id===S.current)||null;
 function deviceId(){try{let d=localStorage.getItem('orchard.device');if(!d){d='d'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('orchard.device',d);}return d;}catch(e){return 'danon';}}

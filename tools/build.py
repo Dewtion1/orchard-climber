@@ -6,12 +6,14 @@ t=(h/'template.html').read_text()
 rules=(h/'rules.js').read_text().replace("if(typeof module!=='undefined')module.exports={parseLevel,stepState,stateKey,solve,hintMove,DIRS};\n","")
 levels=(h/'levels50.json').read_text()
 n=len(json.loads(levels))
-# old->new level index map for the leaderboard rows and local progress written before the v5 set; identity if no map file
+# level index maps for leaderboard rows and local progress written before the current set:
+# v5 = v4 index -> v5 index (survivors only), v6 = v5 index -> current index. Identity if a map is missing.
+maps={'v5':{},'v6':{str(i):i for i in range(n)}}
 if (h/'level-map.json').exists():
-    m={k:v for k,v in json.load(open(h/'level-map.json')).items() if not k.startswith('_')}
-else:
-    m={str(i):i for i in range(n)}
-base=t.replace('/*RULES*/',rules).replace('/*LEVELS*/[]',levels).replace('/*LEVELMAP*/{}',json.dumps(m,separators=(',',':')))
+    j=json.load(open(h/'level-map.json'))
+    if 'v6' in j: maps={'v5':j.get('v5',{}),'v6':j['v6']}
+    else: maps={'v5':{k:v for k,v in j.items() if not k.startswith('_')},'v6':{str(i):i for i in range(n)}}
+base=t.replace('/*RULES*/',rules).replace('/*LEVELS*/[]',levels).replace('/*LEVELMAPS*/{v5:{},v6:{}}',json.dumps(maps,separators=(',',':')))
 # family
 fam=base.replace('/*FACES*/',(h/'faces.js').read_text().strip())
 (h.parent/'index.html').write_text(fam)
