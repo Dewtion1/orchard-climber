@@ -276,7 +276,7 @@ const cv=$('c'),ctx=cv.getContext('2d'),CELL=40;
 let li=0,lv,st,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0,booms=[],parts=[],chomp=0;
 const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0]};
 function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);st=lv.start;hist=[];moves=0;pen=0;dead=false;anim=null;booms=[];parts=[];chomp=0;facing=[1,0];
-  cv.width=lv.W*CELL;cv.height=lv.H*CELL;$('gName').innerHTML=`<small>Level ${i+1} of ${LEVELS.length}</small>${esc(L.name)}`;$('par').textContent=L.par;
+  cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>Level ${i+1} of ${LEVELS.length}</small>${esc(L.name)}`;$('par').textContent=L.par;
   const p=cur();$('skipBtn').hidden=!(p&&p.best&&p.best[i]!=null&&i<LEVELS.length-1);
   $('msg').hidden=true;show('game');refreshStats();fit();draw();
   if(L.tip)toast(L.tip);
@@ -291,7 +291,7 @@ function move(d){if(dead||anim||!$('msg').hidden)return;$('padHint').hidden=true
   else if(r.fell>0&&!r.dead)setTimeout(()=>SFX.land(r.fell),anim?anim.dur:0);
   if(r.dead)setTimeout(()=>SFX.die(),anim?anim.dur:0);
   else if(r.win)setTimeout(()=>SFX.win(),anim?anim.dur:0);
-  else if(st.apples.length===0&&lv.exit&&from.apples.length>0)SFX.door();
+  else if(st.apples.length===0&&lv.exit&&from.apples.length>0){SFX.door();doorAt=performance.now();}
   if(r.dead){dead=true;const why=r.events.some(e=>e.type==='explode')?'Too close to the bang.':(st.snake.some(([x,y])=>lv.spikes.has(x+','+y))?'Spiked!':'The snake fell off the world.');
     setTimeout(()=>showMsg('Splat!',why,'Try again',()=>startLevel(li),'Undo',()=>undo()),520);}
   else if(r.win)setTimeout(levelClear,380);
@@ -301,71 +301,97 @@ function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
   const underPar=moves<=L.par;const last=li===LEVELS.length-1;
   showMsg(last?'Orchard cleared!':(underPar?'Under par!':'Level clear!'),`${moves} moves, par ${L.par}. ${note}`.trim(),last?'Back to levels':'Next level',()=>last?(renderLevels(),show('levels')):startLevel(li+1),'Replay',()=>startLevel(li));}
 function showMsg(t,p,b,fn,b2,fn2){$('mt').textContent=t;$('mp').textContent=p;$('mb').textContent=b;$('mb').onclick=fn;$('mb2').hidden=!b2;if(b2){$('mb2').textContent=b2;$('mb2').onclick=fn2;}$('msg').hidden=false;}
-function undo(){if(!hist.length)return;const h=hist.pop();st=h.st;moves=h.moves;dead=false;anim=null;booms=[];parts=[];chomp=0;$('msg').hidden=true;refreshStats();draw();}
+function undo(){if(!hist.length)return;const h=hist.pop();st=h.st;moves=h.moves;dead=false;anim=null;booms=[];parts=[];chomp=0;landT=0;doorAt=0;$('msg').hidden=true;refreshStats();draw();}
 function animate(from,r){const booming=r.events.filter(e=>e.type==='explode');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){draw();return;}
-  anim={from,t0:performance.now(),dur:90+Math.min(r.fell,6)*55+(booming.length?200:0)};
+  anim={from,fell:r.fell,t0:performance.now(),dur:90+Math.min(r.fell,6)*55+(booming.length?200:0)};
   for(const e of booming)booms.push({x:e.x,y:e.y,t0:performance.now()+anim.dur-220});
   requestAnimationFrame(tick);}
-function tick(now){if(!anim)return;const p=Math.min(1,(now-anim.t0)/anim.dur);draw(p);if(p<1)requestAnimationFrame(tick);else{anim=null;draw();}}
+function tick(now){if(!anim)return;const p=Math.min(1,(now-anim.t0)/anim.dur);draw(p);if(p<1)requestAnimationFrame(tick);else{const f=anim.fell;anim=null;if(f>0&&!dead)landT=1;draw();}}
 function spawnBits(cx,cy){const now=performance.now();for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,sp=60+Math.random()*120;parts.push({x:cx*CELL+CELL/2,y:cy*CELL+CELL/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-80,t0:now,life:450+Math.random()*250,c:Math.random()<.7?'#e0493a':'#fff3c4',r:2+Math.random()*3});}
   parts.push({text:['nom','num','mmm','nom nom'][Math.floor(Math.random()*4)],x:cx*CELL+CELL/2,y:cy*CELL-6,vx:0,vy:-45,t0:now,life:700});}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-function drawRock(x,y,grassy){ctx.fillStyle='#8a7a66';ctx.fillRect(x*CELL,y*CELL,CELL,CELL);ctx.fillStyle='#5d5044';ctx.fillRect(x*CELL,y*CELL+CELL-6,CELL,6);
-  ctx.fillStyle='rgba(0,0,0,.08)';ctx.fillRect(x*CELL+CELL/2,y*CELL+8,CELL/2-2,10);ctx.fillRect(x*CELL+2,y*CELL+22,CELL/2-4,10);
-  if(grassy){ctx.fillStyle='#6fb54a';ctx.fillRect(x*CELL,y*CELL,CELL,9);ctx.fillStyle='#9bd77f';ctx.fillRect(x*CELL,y*CELL,CELL,3);}}
-function drawCrate(px,py){rr(px+3,py+3,CELL-6,CELL-6,5);ctx.fillStyle='#c98a3e';ctx.fill();ctx.strokeStyle='#7a4f1d';ctx.lineWidth=3;ctx.stroke();
-  ctx.beginPath();ctx.moveTo(px+6,py+6);ctx.lineTo(px+CELL-6,py+CELL-6);ctx.moveTo(px+CELL-6,py+6);ctx.lineTo(px+6,py+CELL-6);ctx.stroke();}
-function drawBomb(px,py){const cx=px+CELL/2,cy=py+CELL/2+3;ctx.fillStyle='#2b2b33';ctx.beginPath();ctx.arc(cx,cy,CELL*.3,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.arc(cx-4,cy-5,4,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle='#8a7a66';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx+4,cy-11);ctx.quadraticCurveTo(cx+10,cy-20,cx+14,cy-15);ctx.stroke();
-  const f=(performance.now()/120)%1;ctx.fillStyle=f<.5?'#ffb13b':'#ff6a2a';ctx.beginPath();ctx.arc(cx+14,cy-15,3.5,0,Math.PI*2);ctx.fill();}
-function drawSpikes(x,y){ctx.fillStyle='#9aa3ad';for(let i=0;i<4;i++){const sx=x*CELL+i*CELL/4;ctx.beginPath();ctx.moveTo(sx,y*CELL+CELL);ctx.lineTo(sx+CELL/8,y*CELL+CELL*.4);ctx.lineTo(sx+CELL/4,y*CELL+CELL);ctx.closePath();ctx.fill();}
-  ctx.fillStyle='#6b7480';ctx.fillRect(x*CELL,y*CELL+CELL-4,CELL,4);}
-function drawExit(x,y,open){const px=x*CELL,py=y*CELL;ctx.fillStyle=open?'#e3a51f':'#5d5044';rr(px+7,py+4,CELL-14,CELL-4,8);ctx.fill();
-  ctx.fillStyle=open?'#fff3c4':'#8a7a66';rr(px+12,py+9,CELL-24,CELL-9,5);ctx.fill();
-  if(open){ctx.fillStyle='rgba(227,165,31,.35)';ctx.beginPath();ctx.arc(px+CELL/2,py+CELL/2,CELL*.6,0,Math.PI*2);ctx.fill();}
-  else{ctx.fillStyle='#3b3028';ctx.beginPath();ctx.arc(px+CELL-15,py+CELL/2+2,2.5,0,Math.PI*2);ctx.fill();}}
-function draw(p=1){const W=lv.W,H=lv.H,now=performance.now();
-  const g=ctx.createLinearGradient(0,0,0,cv.height);g.addColorStop(0,'#cfe6f2');g.addColorStop(1,'#eaf3ea');ctx.fillStyle=g;ctx.fillRect(0,0,cv.width,cv.height);
-  ctx.strokeStyle='rgba(33,58,42,.06)';ctx.lineWidth=1;for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,cv.height);ctx.stroke();}for(let y=1;y<H;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(cv.width,y*CELL);ctx.stroke();}
-  // rock, with holes a bomb has blown shown as rubble
+// ---------- art: SVG sprites rasterised once, drawn per cell ----------
+const R=2,PAD=10; // R = backing-store scale for crisp phones; PAD = sprite overflow margin (cell units)
+const ROCK_SVG='<rect width="40" height="40" fill="#8f7f69"/><rect x="2" y="2" width="20" height="16" rx="4" fill="#a8977e"/><rect x="24" y="3" width="14" height="14" rx="4" fill="#9e8d74"/><rect x="2" y="21" width="13" height="17" rx="4" fill="#9e8d74"/><rect x="17" y="21" width="21" height="17" rx="4" fill="#a8977e"/><path d="M6 6h8M27 7h5M21 25h7" stroke="#bfae94" stroke-width="2" stroke-linecap="round"/>';
+const SPR_SVG={
+  rock:ROCK_SVG,
+  top:ROCK_SVG+'<path d="M0 0h40v9c-3 0-3 4-6 4s-3-4-6-4-3 5-7 5-3-5-6-5-3 4-6 4-3-4-6-4z" fill="#4f9d3c"/><rect width="40" height="4" fill="#7cc35f"/><path d="M5 1l2-6 2 6M19 1l1-5 2 5M31 1l2-6 2 6" fill="#7cc35f"/>',
+  apple:'<path d="M20 12c-3-3-11-3-13 4-2 7 2 17 8 18 2 0 3-1 5-1s3 1 5 1c6-1 10-11 8-18-2-7-10-7-13-4z" fill="#e0493a" stroke="#a8301f" stroke-width="1.5"/><path d="M12 18c0-3 2-5 5-5" stroke="#f6a497" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M20 13c0-4 1-6 3-8" stroke="#6b4226" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M22 8c3-4 8-4 10-2-2 4-7 5-10 2z" fill="#4caf50"/>',
+  crate:'<rect x="2" y="2" width="36" height="36" rx="3" fill="#c98a4b" stroke="#6b4422" stroke-width="2.5"/><path d="M4 14h32M4 26h32" stroke="#a86f38" stroke-width="2"/><rect x="5.5" y="5.5" width="29" height="29" fill="none" stroke="#8a5a2b" stroke-width="3"/><path d="M8 32L32 8" stroke="#8a5a2b" stroke-width="4.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1.6" fill="#3d2614"/><circle cx="32" cy="8" r="1.6" fill="#3d2614"/><circle cx="8" cy="32" r="1.6" fill="#3d2614"/><circle cx="32" cy="32" r="1.6" fill="#3d2614"/>',
+  bomb:'<circle cx="20" cy="24" r="14" fill="#2b2f36"/><circle cx="15" cy="19" r="4" fill="#4a5059"/><rect x="16" y="7" width="8" height="5" rx="1.5" fill="#5b616b"/><path d="M20 8c2-4 6-5 9-3" stroke="#c9a46a" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  spikes:'<rect x="1" y="33" width="38" height="7" rx="2" fill="#6e7680"/><path d="M2 34L8 14L14 34ZM14 34L20 10L26 34ZM26 34L32 14L38 34Z" fill="#d3d8dd" stroke="#4a525c" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 15L11 33M20 11L23 33M32 15L35 33" stroke="#9aa2ab" stroke-width="1.5"/>',
+  doorShut:'<path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#8a5a2b"/><path d="M15.5 7.5V40M24.5 7.5V40" stroke="#6b4422" stroke-width="1.5"/><path d="M17.5 23v-2.5a2.5 2.5 0 0 1 5 0V23" stroke="#e3a51f" stroke-width="2" fill="none"/><rect x="16" y="23" width="8" height="7" rx="1.5" fill="#e3a51f"/>',
+  doorOpen:'<circle cx="20" cy="24" r="22" fill="#ffe9a8" opacity="0.45"/><path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#fff4c2"/><path d="M10 40V22a10 10 0 0 1 20 0v18z" fill="#ffe08a"/><path d="M7 19L2 22V40H7Z" fill="#8a5a2b" stroke="#6b4422" stroke-width="1"/><path d="M20 12l1.2 3 3 1.2-3 1.2L20 20.4l-1.2-3-3-1.2 3-1.2z" fill="#ffffff"/>',
+  rubble:'<rect x="3" y="30" width="12" height="8" rx="3" fill="#8f7f69"/><rect x="16" y="32" width="9" height="6" rx="2.5" fill="#a8977e"/><rect x="26" y="29" width="11" height="9" rx="3" fill="#9e8d74"/><rect x="11" y="25" width="7" height="6" rx="2" fill="#a8977e"/><path d="M4 38h32" stroke="#6f604d" stroke-width="2" stroke-linecap="round"/>',
+  boom:'<path d="M20 -2l5 10 11-4-4 11 10 5-10 5 4 11-11-4-5 10-5-10-11 4 4-11-10-5 10-5-4-11 11 4z" fill="#ff8a2b"/><path d="M20 6l3 7 7-3-3 7 7 3-7 3 3 7-7-3-3 7-3-7-7 3 3-7-7-3 7-3-3-7 7 3z" fill="#ffd34d"/><circle cx="20" cy="20" r="5" fill="#fff4c2"/>'
+};
+const SPR={};
+for(const k in SPR_SVG){const im=new Image();const S=(CELL+2*PAD)*R;
+  im.onload=()=>{if(lv&&!$('game').hidden&&!anim)draw();};
+  im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-PAD} ${-PAD} ${CELL+2*PAD} ${CELL+2*PAD}" width="${S}" height="${S}">${SPR_SVG[k]}</svg>`);SPR[k]=im;}
+function spr(k,px,py,s=1,a=1){const im=SPR[k];if(!im||!im.complete||!im.naturalWidth)return;const w=(CELL+2*PAD)*s,cx=px+CELL/2,cy=py+CELL/2;
+  if(a!==1)ctx.globalAlpha=a;ctx.drawImage(im,cx-w/2,cy-w/2,w,w);if(a!==1)ctx.globalAlpha=1;}
+let doorAt=0,landT=0;
+function drawRock(x,y,grassy){spr(grassy?'top':'rock',x*CELL,y*CELL);}
+function drawCrate(px,py){spr('crate',px,py);}
+function drawBomb(px,py){spr('bomb',px,py);const f=.6+.4*Math.sin(performance.now()/45);ctx.globalAlpha=f;
+  ctx.fillStyle='#ffb02e';ctx.beginPath();ctx.arc(px+30,py+4,3.4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff4c2';ctx.beginPath();ctx.arc(px+30,py+4,1.5,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+function drawSpikes(x,y){spr('spikes',x*CELL,y*CELL);}
+function drawExit(x,y,open,k){if(!open){spr('doorShut',x*CELL,y*CELL);return;}if(k<1)spr('doorShut',x*CELL,y*CELL,1,1-k);spr('doorOpen',x*CELL,y*CELL,1,k);}
+function cloud(x,y,s){ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.arc(x,y,9*s,0,Math.PI*2);ctx.arc(x+12*s,y-6*s,11*s,0,Math.PI*2);ctx.arc(x+26*s,y,9*s,0,Math.PI*2);ctx.rect(x,y,26*s,9*s);ctx.fill();}
+function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now();let more=false;
+  ctx.setTransform(R,0,0,R,0,0);
+  // sky, a far hill, two clouds, a faint grid
+  ctx.fillStyle='#dfeff5';ctx.fillRect(0,0,BW,BH);
+  ctx.fillStyle='#c4e3b2';ctx.beginPath();ctx.moveTo(0,BH*.69);ctx.bezierCurveTo(BW*.3,BH*.6,BW*.55,BH*.7,BW,BH*.62);ctx.lineTo(BW,BH);ctx.lineTo(0,BH);ctx.closePath();ctx.fill();
+  cloud(BW*.12,BH*.15,1.1);cloud(BW*.62,BH*.1,.8);
+  ctx.strokeStyle='rgba(33,58,42,.045)';ctx.lineWidth=1;for(let x=1;x<W;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,BH);ctx.stroke();}for(let y=1;y<H;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(BW,y*CELL);ctx.stroke();}
+  // bomb screen shake (first half of each boom)
+  booms=booms.filter(b=>now-b.t0<450);
+  let sh=0;for(const b of booms){const q=(now-b.t0)/450;if(q>=0&&q<.5)sh=Math.max(sh,6*(1-q*2));}
+  if(sh)ctx.translate((Math.random()*2-1)*sh,(Math.random()*2-1)*sh);
+  // rock; holes a bomb has blown are left as rubble
   const gone=new Set(st.gone);
-  for(const k of lv.walls){const [x,y]=k.split(',').map(Number);if(gone.has(k)){ctx.fillStyle='rgba(93,80,68,.25)';for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(x*CELL+8+i*8,y*CELL+CELL-6-(i%2)*5,3,0,Math.PI*2);ctx.fill();}continue;}
+  for(const k of lv.walls){const [x,y]=k.split(',').map(Number);if(gone.has(k)){spr('rubble',x*CELL,y*CELL);continue;}
     drawRock(x,y,!(lv.walls.has(x+','+(y-1))&&!gone.has(x+','+(y-1))));}
   for(const k of lv.spikes){const [x,y]=k.split(',').map(Number);if(!st.objs.some(o=>o.x===x&&o.y===y))drawSpikes(x,y);}
-  if(lv.exit)drawExit(lv.exit[0],lv.exit[1],st.apples.length===0);
-  for(const [x,y] of st.apples){const cx=x*CELL+CELL/2,cy=y*CELL+CELL/2+2;ctx.fillStyle='#e0493a';ctx.beginPath();ctx.arc(cx,cy,CELL*.32,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.arc(cx-5,cy-6,4,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#5d4a2e';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx,cy-11);ctx.lineTo(cx+2,cy-18);ctx.stroke();
-    ctx.fillStyle='#4caf50';ctx.beginPath();ctx.ellipse(cx+7,cy-15,6,3,-.5,0,Math.PI*2);ctx.fill();}
+  if(lv.exit){const open=st.apples.length===0,k=Math.min(1,(now-doorAt)/300);if(open&&k<1)more=true;drawExit(lv.exit[0],lv.exit[1],open,k);}
+  for(const [x,y] of st.apples)spr('apple',x*CELL,y*CELL);
   // objects (interpolated by id; vanished bombs are drawn at their last position until the boom)
   const objsNow=anim?[...st.objs,...anim.from.objs.filter(o=>!st.objs.some(q=>q.id===o.id)&&p<.85)]:st.objs;
   for(const o of objsNow){let x=o.x,y=o.y;if(anim){const f=anim.from.objs.find(q=>q.id===o.id);if(f&&st.objs.some(q=>q.id===o.id)){x=f.x+(o.x-f.x)*p;y=f.y+(o.y-f.y)*p;}}
     if(o.t==='C')drawCrate(x*CELL,y*CELL);else drawBomb(x*CELL,y*CELL);}
+  // snake: one thick stroke through the segment centres, then the head
   const snake=st.snake;
   const segs=snake.map((s,i)=>{if(!anim)return s;const fs=anim.from.snake;const f=fs[i]||fs[fs.length-1];return [f[0]+(s[0]-f[0])*p,f[1]+(s[1]-f[1])*p];});
+  const pts=segs.map(([x,y])=>[x*CELL+CELL/2,y*CELL+CELL/2]);
   const shake=bumpT>0?Math.sin(now/20)*3*bumpT:0;ctx.save();ctx.translate(shake,0);
-  for(let i=segs.length-1;i>=0;i--){const [x,y]=segs[i];const t=i/Math.max(1,segs.length-1);ctx.fillStyle=i===0?'#2f7d3a':(t<.5?'#4caf50':'#56b85a');rr(x*CELL+3,y*CELL+3,CELL-6,CELL-6,i===0?13:11);ctx.fill();
-    if(i>0){ctx.fillStyle='rgba(255,255,255,.18)';rr(x*CELL+9,y*CELL+8,CELL-18,8,4);ctx.fill();}}
-  const [hx,hy]=segs[0],ex=hx*CELL+CELL/2,ey=hy*CELL+CELL/2,[fx,fy]=facing;
+  if(landT>0){const by=Math.max(...pts.map(q=>q[1]))+CELL/2,bx=pts.reduce((a,q)=>a+q[0],0)/pts.length;ctx.translate(bx,by);ctx.scale(1+.1*landT,1-.12*landT);ctx.translate(-bx,-by);}
+  const line=(w,c)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(pts[pts.length-1][0],pts[pts.length-1][1]);for(let i=pts.length-2;i>=0;i--)ctx.lineTo(pts[i][0],pts[i][1]);if(pts.length===1)ctx.lineTo(pts[0][0]+.01,pts[0][1]);ctx.stroke();};
+  line(35,'#1d6e4a');line(29,'#2e9e6b');ctx.globalAlpha=.7;line(7,'#45b880');ctx.globalAlpha=1;
+  ctx.fillStyle='#8fd9a8';for(let i=1;i<pts.length;i++){const o=i%2?[-5,-4]:[5,4];ctx.beginPath();ctx.arc(pts[i][0]+o[0],pts[i][1]+o[1],3.5,0,Math.PI*2);ctx.fill();}
+  const [ex,ey]=pts[0],[fx,fy]=facing;
   if(chomp>0){const sc=1+Math.sin(chomp*Math.PI)*.22;ctx.translate(ex,ey);ctx.scale(sc,sc);ctx.translate(-ex,-ey);}
+  if(!dead){ctx.strokeStyle='#e0493a';ctx.lineWidth=2.5;ctx.lineCap='round';const tx=ex+fx*25,ty=ey+fy*25,nx=-fy,ny=fx;
+    ctx.beginPath();ctx.moveTo(ex+fx*18,ey+fy*18);ctx.lineTo(tx,ty);ctx.lineTo(tx+fx*3+nx*3,ty+fy*3+ny*3);ctx.moveTo(tx,ty);ctx.lineTo(tx+fx*3-nx*3,ty+fy*3-ny*3);ctx.stroke();}
+  ctx.fillStyle='#2e9e6b';ctx.beginPath();ctx.arc(ex,ey,19,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#1d6e4a';ctx.lineWidth=3;ctx.stroke();
   const p0=cur(),fi=p0?p0.face:-1,im=fi>=0?faceImgs[fi]:null;
-  if(im&&im.complete&&im.naturalWidth){ctx.save();ctx.beginPath();ctx.arc(ex,ey,CELL*.42,0,Math.PI*2);ctx.clip();ctx.drawImage(im,ex-CELL*.42,ey-CELL*.42,CELL*.84,CELL*.84);ctx.restore();
-    ctx.strokeStyle='#2f7d3a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(ex,ey,CELL*.42,0,Math.PI*2);ctx.stroke();}
-  else{const off=fx!==0?[[0,-7],[0,7]]:[[-7,0],[7,0]];for(const [ox,oy] of off){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex+ox+fx*6,ey+oy+fy*6,5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1d2a20';ctx.beginPath();ctx.arc(ex+ox+fx*8,ey+oy+fy*8,2.5,0,Math.PI*2);ctx.fill();}}
+  if(im&&im.complete&&im.naturalWidth){ctx.save();ctx.beginPath();ctx.arc(ex,ey,14.5,0,Math.PI*2);ctx.clip();ctx.drawImage(im,ex-14.5,ey-14.5,29,29);ctx.restore();}
+  else{const off=fx!==0?[[0,-6],[0,6]]:[[-6,0],[6,0]];for(const [ox,oy] of off){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex+ox+fx*5,ey+oy+fy*5,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#213a2a';ctx.beginPath();ctx.arc(ex+ox+fx*7,ey+oy+fy*7,2.7,0,Math.PI*2);ctx.fill();}}
   ctx.restore();
   // apple bits and nom text
   parts=parts.filter(q=>now-q.t0<q.life);
   for(const q of parts){const a=(now-q.t0)/1000,k=1-(now-q.t0)/q.life;const x=q.x+q.vx*a,y=q.y+q.vy*a+(q.text?0:260*a*a);
-    if(q.text){ctx.font='800 15px Nunito, sans-serif';ctx.textAlign='center';ctx.fillStyle=`rgba(158,43,34,${k})`;ctx.fillText(q.text,x,y);}
+    if(q.text){ctx.font="16px 'Lilita One', sans-serif";ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle=`rgba(246,240,228,${k})`;ctx.strokeText(q.text,x,y);ctx.fillStyle=`rgba(181,48,31,${k})`;ctx.fillText(q.text,x,y);}
     else{ctx.fillStyle=q.c;ctx.globalAlpha=k;ctx.beginPath();ctx.arc(x,y,q.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}}
-  // explosions
-  booms=booms.filter(b=>now-b.t0<450);let more=false;
-  for(const b of booms){const q=(now-b.t0)/450;if(q<0){more=true;continue;}more=true;const cx=b.x*CELL+CELL/2,cy=b.y*CELL+CELL/2;
-    ctx.fillStyle=`rgba(255,${Math.round(180-120*q)},40,${1-q})`;ctx.beginPath();ctx.arc(cx,cy,CELL*(.3+q*1.1),0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=`rgba(255,255,255,${(1-q)*.8})`;ctx.beginPath();ctx.arc(cx,cy,CELL*(.1+q*.5),0,Math.PI*2);ctx.fill();}
+  // explosions: starburst grows 0.4→1.2 and fades, with a white flash
+  for(const b of booms){const q=(now-b.t0)/450;more=true;if(q<0)continue;
+    spr('boom',b.x*CELL,b.y*CELL,.4+q*.8,1-q);
+    ctx.fillStyle=`rgba(255,255,255,${(1-q)*.7})`;ctx.beginPath();ctx.arc(b.x*CELL+CELL/2,b.y*CELL+CELL/2,CELL*(.1+q*.5),0,Math.PI*2);ctx.fill();}
   if(bumpT>0){bumpT-=.12;more=true;}
   if(chomp>0){chomp-=.09;more=true;}
+  if(landT>0){landT=Math.max(0,landT-.16);more=true;}
   if(parts.length)more=true;
   if(st.objs.some(o=>o.t==='B'))more=true; // fuse flicker
   if(more&&!anim)requestAnimationFrame(()=>{if(!anim)draw();});}
