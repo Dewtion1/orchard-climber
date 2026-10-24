@@ -9,9 +9,9 @@ const CH={
   1:{allow:'CX',   grid:'14x12',sol:[10,40], dead:0,   apples:[2,5]},
   2:{allow:'CXB',  grid:'14x14',sol:[18,60], dead:0.03,apples:[3,6],needB:true},
   3:{allow:'CXBK', grid:'16x14',sol:[22,80], dead:0.04,apples:[3,6],feature:'K'},
-  4:{allow:'CXBKQ',grid:'16x14',sol:[22,85], dead:0.05,apples:[3,7],feature:'Q'},
+  4:{allow:'CXBKQ',grid:'16x14',sol:[22,85], dead:0.04,apples:[3,7],feature:'Q'},
   5:{allow:'CXBKQP',grid:'16x16',sol:[25,90],dead:0.05,apples:[3,7],feature:'P'},
-  6:{allow:'CXBKQPG',grid:'18x16',sol:[25,100],dead:0.06,apples:[3,7],feature:'G'},
+  6:{allow:'CXBKQPG',grid:'18x16',sol:[25,100],dead:0.04,apples:[3,7],feature:'G'},
   7:{allow:'CXBKQPGH',grid:'18x16',sol:[25,100],dead:0.06,apples:[3,7],feature:'H'},
   8:{allow:'CXBKQPGH',grid:'18x18',sol:[28,110],dead:0.06,apples:[3,8],det:true,needB:true},
   9:{allow:'CXBKQPGH',grid:'20x18',sol:[30,120],dead:0.08,apples:[4,9],anyPickup:true},
@@ -60,9 +60,9 @@ const EDITS=[
   g=>{const p=cells(g,c=>PICKS.includes(c));if(!p.length)return false;const [x,y]=pick(p);const t=freeCell(g);if(!t)return false;const c=g[y][x];g[y][x]='.';g[t[1]][t[0]]=c;return true;},
   g=>{const p=cells(g,c=>PICKS.includes(c));if(!p.length)return false;const [x,y]=pick(p);g[y][x]='.';return true;},
 ];
-function mutate(rows){const g=toG(rows);const n=ri(3,7);let done=0;for(let i=0;i<n*4&&done<n;i++){if(pick(EDITS)(g))done++;}
+function mutate(rows){const g=toG(rows);const n=ri(2,5);let done=0;for(let i=0;i<n*4&&done<n;i++){if(pick(EDITS)(g))done++;}
   if(done<2)return null;
-  if(C.feature&&!cells(g,c=>c===C.feature).length){const t=freeCell(g);if(!t)return null;g[t[1]][t[0]]=C.feature;}
+  if(C.feature&&!cells(g,c=>c===C.feature).length){const goals=cells(g,c=>c==='A'||c==='E');const near=cells(g,(c,x,y)=>c==='.'&&y>0&&y<H-1&&!nearSnake(g,x,y)&&goals.some(([gx,gy])=>Math.abs(gx-x)+Math.abs(gy-y)<=2));const t=near.length&&rnd()<.8?pick(near):freeCell(g);if(!t)return null;g[t[1]][t[0]]=C.feature;}
   if(C.needB&&!cells(g,c=>c==='B').length){const t=tops(g).filter(([x,y])=>!nearSnake(g,x,y));if(!t.length)return null;const [x,y]=pick(t);g[y][x]='B';}
   if(C.anyPickup&&!cells(g,c=>PICKS.includes(c)).length){const t=freeCell(g);if(!t)return null;g[t[1]][t[0]]=pick([...PICKS]);}
   const out=g.map(r=>r.join(''));const k=out.join('');const na=(k.match(/A/g)||[]).length;
@@ -80,6 +80,7 @@ const {parents,known}=load();const pool=[];const rej={bad:0,dup:0,gate:0,strippe
 const parentSol=new Map();const solOf=rows=>{const k=rows.join('');if(!parentSol.has(k)){const r=solve(P(rows),CAP_SOLVE);parentSol.set(k,r?r.path:null);}return parentSol.get(k);};
 const seen=new Set(known.map(r=>r.join('')));const t0=Date.now();
 while(pool.length<POOL&&tries<400000){tries++;
+  if(tries%100===0)process.stderr.write(`  ...tries ${tries} ${((Date.now()-t0)/1000).toFixed(0)}s rejected ${JSON.stringify(rej)}\n`);
   const parent=pick(parents);const rows=mutate(parent);if(!rows){rej.bad++;continue;}
   const k=rows.join('');if(seen.has(k)){rej.dup++;continue;}seen.add(k);
   const q=solve(P(rows),CAP_SOLVE);if(!q||q.path.length<MIN_SOL||q.path.length>MAX_SOL){rej.gate++;continue;}
@@ -94,7 +95,7 @@ while(pool.length<POOL&&tries<400000){tries++;
   let ok=true;for(const t of present){if(!rp.ev.pick[t])ok=false;if(t==='K'&&!rp.ev.cut)ok=false;if(t==='P'&&!rp.ev.plant)ok=false;}
   if(!ok){rej.pickups++;continue;}
   // the featured power-up has to matter: without it the level is unsolvable or clearly longer
-  if(C.feature){const s=solve(P(rows.map(r=>r.split(C.feature).join('.'))),CAP_SOLVE);if(s&&s.path.length<q.path.length+6){rej.feature++;continue;}}
+  if(C.feature){const need='QG'.includes(C.feature)?2:6;const s=solve(P(rows.map(r=>r.split(C.feature).join('.'))),CAP_SOLVE);if(s&&s.path.length<q.path.length+need){rej.feature++;continue;}}
   if(C.anyPickup&&!present.length){rej.feature++;continue;}
   if(q.path===solOf(parent)){rej.samepath++;continue;}
   let near=false;for(const o of known)if(dist(o,rows)<MIN_DIST){near=true;break;}if(!near)for(const o of pool)if(dist(o.rows,rows)<MIN_DIST){near=true;break;}

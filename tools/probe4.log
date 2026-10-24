@@ -1,0 +1,2 @@
+  ...tries 100 63s rejected {"bad":15,"dup":0,"gate":50,"stripped":15,"objects":5,"pickups":13,"feature":1,"analyse":0,"dead":0,"near":0,"samepath":0}
+  ...tries 200 126s rejected {"bad":38,"dup":0,"gate":111,"stripped":21,"objects":8,"pickups":17,"feature":3,"analyse":1,"dead":0,"near":0,"samepath":0}
