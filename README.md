@@ -13,6 +13,9 @@ Move one cell at a time (one swipe = one move). After every move, if no part of 
 
 Every clear earns **stars** from the move count: three within about a fifth of the shortest solution (`ceil(par*1.2)+2` moves), two within about three fifths (`ceil(par*1.6)+4`), one for any clear. Matching the shortest solution (the stored `par`) earns a **gold apple stamp** on top. The leaderboard ranks by levels cleared, then stars, then stamps, then total moves. Hint costs 3 moves in two stages: the first tap (−1) marks the apple (or door) the shortest solution goes for next, the second (−2) shows the move. Hints are solved in a Web Worker so the phone never freezes.
 
+## The Valley
+A 100-level review map (opened from the home screen, fully unlocked, progress kept apart from the board). Ten chapters of ten: basics, bombs, sword, sour apple, seed, golden apple, honey, detonator, then two chapters with everything. Boards grow from 14x12 to 20x18 through the chapters, each chapter rises by difficulty, and its 5th and 10th levels are the two hardest. Built by `tools/gen4.js` (chapter-aware mutation: allowed mechanics, a featured power-up the shortest solution must use and that must matter) and `tools/assemble-valley.js`.
+
 ## Screens
 Splash (tap to start; also unlocks audio on iOS) → Home (player tiles, Play, Family Board, The Valley, Test map) → The Orchard (a winding path of level nodes, current level marked with your face, per-level best holder from the board) → Game (cream strip with Moves / par / Length and Undo / Restart / Hint / mute, board edge to edge, tutorial tip card under it) → Level clear / Splat / Orchard cleared cards. Adding a player whose name already has scores on the board from another phone offers to restore that progress.
 
