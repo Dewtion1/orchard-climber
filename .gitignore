@@ -11,3 +11,5 @@ tools/run3-*.log
 tools/pool3-*.json
 tools/pool4-*.json
 tools/run4-*.log
+tools/run4b-*.log
+tools/probe*.log
