@@ -1,6 +1,6 @@
-// Hand-made levels for the test map. The button tutorial comes first.
+// Hand-made levels for the test map. The detonator tutorial comes first.
 module.exports=[
-{name:"Red Button",tip:"Step on the red button to set the bomb off from a distance. It blows the rock beneath it.",rows:[
+{name:"Red Button",detonator:true,tip:"Bombs here wait for you. Tap Boom to set them off, but get clear first: anything next to a bomb gets splatted.",rows:[
 "..............",
 "..............",
 "..............",
@@ -8,10 +8,10 @@ module.exports=[
 "..............",
 "..............",
 "..............",
-"..............",
-"..T..oS.B.....",
+"oSB..........E",
 "##############",
-".E..A.........",
+"..............",
+"....A.....A...",
 "##############",
 ]},
 ];

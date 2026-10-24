@@ -4,7 +4,7 @@
 //   bridge          : solution 18..38 moves, exactly one object (a crate OR a bomb), no trap-ratio floor
 // Acceptance (both modes): solvable; unsolvable with every crate/bomb stripped (so an object is necessary);
 //   if crates are present the shortest solution pushes at least twice; if a bomb is present it explodes.
-const {parseLevel,stepState,stateKey,solve,DIRS}=require('./rules.js');
+const {parseLevel,stepState,stateKey,solve,DIRS,movesFor}=require('./rules.js');
 // board size: 14x12 by default; GRID=WxH in the environment makes bigger boards (geometry counts scale with the area)
 let W=14,H=12;if(process.env.GRID){const m=/^(\d+)x(\d+)$/.exec(process.env.GRID);if(m){W=+m[1];H=+m[2];}}
 const AREA=(W*H)/(14*12),TALL=H/12,BIG=AREA>1;
@@ -16,12 +16,12 @@ const CAP_SOLVE=BIG?Math.round(90000*AREA):90000,CAP_AN=BIG?Math.round(260000*AR
 function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;}
 const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
 
-function analyse(rows,cap){cap=cap||180000;
-  const lv=parseLevel({rows});if(!lv.start.snake[0])return null;
+function analyse(rows,cap,det){cap=cap||180000;
+  const lv=parseLevel({rows,detonator:det});if(!lv.start.snake[0])return null;
   const id=new Map(),states=[],adj=[];let goalDist=-1;const goals=[];
   id.set(stateKey(lv.start),0);states.push(lv.start);adj.push([]);
   let q=[0],depth=0;
-  while(q.length){const nq=[];for(const i of q){const st=states[i];for(const [dx,dy] of DIRS){
+  while(q.length){const nq=[];for(const i of q){const st=states[i];for(const [dx,dy] of movesFor(lv)){
     const r=stepState(lv,st,dx,dy);if(!r||r.dead)continue;
     const k=stateKey(r.state);let j=id.get(k);
     if(j==null){j=states.length;id.set(k,j);states.push(r.state);adj.push([]);nq.push(j);if(r.win){goals.push(j);if(goalDist<0)goalDist=depth+1;}}
@@ -36,11 +36,11 @@ function analyse(rows,cap){cap=cap||180000;
 }
 
 // Replay a solution path and count what actually happens in it (same method as review.js).
-function replay(rows,path){
-  const lv=parseLevel({rows});let st=lv.start,pushes=0,booms=0,bbooms=0,falls=0,maxLen=0;
-  for(const c of path){const [dx,dy]=DIRS.find(d=>d[2]===c);const r=stepState(lv,st,dx,dy);if(!r)return null;st=r.state;
-    pushes+=r.events.filter(e=>e.type==='push').length;booms+=r.events.filter(e=>e.type==='explode').length;bbooms+=r.events.filter(e=>e.type==='explode'&&e.button).length;if(r.fell)falls++;maxLen=Math.max(maxLen,st.snake.length);}
-  return {pushes,booms,bbooms,falls,maxLen};
+function replay(rows,path,det){
+  const lv=parseLevel({rows,detonator:det});let st=lv.start,pushes=0,booms=0,dets=0,falls=0,maxLen=0;const M=movesFor(lv);
+  for(const c of path){const [dx,dy]=M.find(d=>d[2]===c);if(c==='B')dets++;const r=stepState(lv,st,dx,dy);if(!r)return null;st=r.state;
+    pushes+=r.events.filter(e=>e.type==='push').length;booms+=r.events.filter(e=>e.type==='explode').length;if(r.fell)falls++;maxLen=Math.max(maxLen,st.snake.length);}
+  return {pushes,booms,dets,falls,maxLen};
 }
 
 function blank(){const g=[];for(let y=0;y<H;y++)g.push(Array(W).fill('.'));for(let x=0;x<W;x++)g[H-1][x]='#';return g;}

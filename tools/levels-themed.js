@@ -56,12 +56,12 @@ module.exports=[
 "######.A.#####",
 "##############",
 ]},
-{name:"Cider Press",tip:"The press room is sealed. Blow your way in from the attic.",rows:[
+{name:"Cider Press",detonator:true,tip:"The press room is sealed. Blow your way in from the attic, from a safe distance.",rows:[
 "..............",
 "..............",
 "..............",
 "..............",
-"...AB...oS.T..",
+"...AB...oS....",
 "...##########.",
 "...#.....#....",
 "...#..A..#....",
