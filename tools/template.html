@@ -528,8 +528,9 @@ function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)re
 function undo(){if(!hist.length){dead=false;$('overlay').hidden=true;return;}const h=hist.pop();st=h.st;moves=h.moves;dead=false;anim=null;booms=[];parts=[];chomp=0;landT=0;doorAt=0;clearHint();$('overlay').hidden=true;refreshStats();draw();}
 function animate(from,r){const booming=r.events.filter(e=>e.type==='explode'),pushed=r.events.some(e=>e.type==='push');
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){draw();return;}
-  anim={from,fell:r.fell,t0:performance.now(),dur:90+Math.min(r.fell,6)*55+(booming.length?200:0)+(pushed?40:0),push:pushed?40:0};
-  for(const e of booming)booms.push({x:e.x,y:e.y,t0:performance.now()+anim.dur-220});
+  anim={from,fell:r.fell,t0:performance.now(),dur:90+Math.min(r.fell,6)*55+(booming.length?320:0)+(pushed?40:0),push:pushed?40:0,fallTo:{}};
+  for(const e of booming){booms.push({x:e.x,y:e.y,t0:performance.now()+anim.dur-220});
+    const b=from.objs.filter(o=>o.t==='B'&&!r.state.objs.some(q=>q.id===o.id)&&!(o.id in anim.fallTo)).sort((p,q)=>(Math.abs(p.x-e.x)+Math.abs(p.y-e.y))-(Math.abs(q.x-e.x)+Math.abs(q.y-e.y)))[0];if(b)anim.fallTo[b.id]=[e.x,e.y];}
   requestAnimationFrame(tick);}
 function tick(now){if(!anim)return;const p=Math.min(1,(now-anim.t0)/anim.dur);draw(p);if(p<1)requestAnimationFrame(tick);else{const f=anim.fell;anim=null;if(f>0&&!dead)landT=1;draw();}}
 
@@ -640,8 +641,9 @@ function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now()
   if(hintApple){more=true;const q=(Math.sin((now-hintT)/180)+1)/2;ctx.strokeStyle='rgba(227,165,31,'+(.55+.45*q)+')';ctx.lineWidth=4;ctx.beginPath();ctx.arc(hintApple[0]*CELL+CELL/2,hintApple[1]*CELL+CELL/2,CELL*.5+3*q,0,Math.PI*2);ctx.stroke();
     ctx.strokeStyle='rgba(246,240,228,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hintApple[0]*CELL+CELL/2,hintApple[1]*CELL+CELL/2,CELL*.5+3*q+3,0,Math.PI*2);ctx.stroke();}
   // objects (interpolated by id; vanished bombs are drawn at their last position until the boom)
-  const objsNow=anim?[...st.objs,...anim.from.objs.filter(o=>!st.objs.some(q=>q.id===o.id)&&p<.85)]:st.objs;
-  for(const o of objsNow){let x=o.x,y=o.y;if(anim){const f=anim.from.objs.find(q=>q.id===o.id);if(f&&st.objs.some(q=>q.id===o.id)){x=f.x+(o.x-f.x)*pp;y=f.y+(o.y-f.y)*pp;}}
+  const objsNow=anim?[...st.objs,...anim.from.objs.filter(o=>!st.objs.some(q=>q.id===o.id)&&p<.8)]:st.objs;
+  for(const o of objsNow){let x=o.x,y=o.y;if(anim){const f=anim.from.objs.find(q=>q.id===o.id);if(f&&st.objs.some(q=>q.id===o.id)){x=f.x+(o.x-f.x)*pp;y=f.y+(o.y-f.y)*pp;}
+      else if(f&&anim.fallTo[o.id]){const [tx,ty]=anim.fallTo[o.id],q=Math.min(1,pp/.8);x=f.x+(tx-f.x)*q;y=f.y+(ty-f.y)*q;}}
     if(o.t==='C')drawCrate(x*CELL,y*CELL);else drawBomb(x*CELL,y*CELL);}
   // snake: one thick stroke through the segment centres, then the head
   const snake=st.snake;
