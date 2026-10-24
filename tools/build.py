@@ -3,7 +3,7 @@ import pathlib,json,hashlib
 from urllib.parse import quote
 h=pathlib.Path(__file__).parent
 t=(h/'template.html').read_text()
-rules=(h/'rules.js').read_text().replace("if(typeof module!=='undefined')module.exports={parseLevel,stepState,stateKey,solve,hintMove,DIRS,DET,movesFor};\n","")
+rules=(h/'rules.js').read_text().replace("if(typeof module!=='undefined')module.exports={parseLevel,stepState,stateKey,isRock,solve,hintMove,DIRS,DET,PLANT,movesFor};\n","")
 levels=(h/'levels50.json').read_text()
 big=(h/'levels-big.json').read_text() if (h/'levels-big.json').exists() else '[]'
 n=len(json.loads(levels))

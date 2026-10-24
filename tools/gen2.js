@@ -21,8 +21,8 @@ function analyse(rows,cap,det){cap=cap||180000;
   const id=new Map(),states=[],adj=[];let goalDist=-1;const goals=[];
   id.set(stateKey(lv.start),0);states.push(lv.start);adj.push([]);
   let q=[0],depth=0;
-  while(q.length){const nq=[];for(const i of q){const st=states[i];for(const [dx,dy] of movesFor(lv)){
-    const r=stepState(lv,st,dx,dy);if(!r||r.dead)continue;
+  while(q.length){const nq=[];for(const i of q){const st=states[i];for(const [dx,dy,mc] of movesFor(lv)){
+    const r=stepState(lv,st,dx,dy,mc);if(!r||r.dead)continue;
     const k=stateKey(r.state);let j=id.get(k);
     if(j==null){j=states.length;id.set(k,j);states.push(r.state);adj.push([]);nq.push(j);if(r.win){goals.push(j);if(goalDist<0)goalDist=depth+1;}}
     adj[i].push(j);}}
@@ -38,7 +38,7 @@ function analyse(rows,cap,det){cap=cap||180000;
 // Replay a solution path and count what actually happens in it (same method as review.js).
 function replay(rows,path,det){
   const lv=parseLevel({rows,detonator:det});let st=lv.start,pushes=0,booms=0,dets=0,falls=0,maxLen=0;const M=movesFor(lv);
-  for(const c of path){const [dx,dy]=M.find(d=>d[2]===c);if(c==='B')dets++;const r=stepState(lv,st,dx,dy);if(!r)return null;st=r.state;
+  for(const c of path){const [dx,dy]=M.find(d=>d[2]===c);if(c==='B')dets++;const r=stepState(lv,st,dx,dy,c);if(!r)return null;st=r.state;
     pushes+=r.events.filter(e=>e.type==='push').length;booms+=r.events.filter(e=>e.type==='explode').length;if(r.fell)falls++;maxLen=Math.max(maxLen,st.snake.length);}
   return {pushes,booms,dets,falls,maxLen};
 }

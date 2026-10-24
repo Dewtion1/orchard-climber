@@ -116,10 +116,16 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .strip .r2{display:flex;gap:8px}
 .strip .r2 button{flex:1 1 0;padding:0 6px}
 .strip .r2 button.round{flex:0 0 44px}
-#boomBtn{position:absolute;right:max(20px,env(safe-area-inset-right,0px));bottom:max(28px,env(safe-area-inset-bottom,0px));z-index:6;width:88px;height:88px;border-radius:44px;padding:0;flex-direction:column;gap:2px;
-  background:var(--splat);color:#fff;box-shadow:0 5px 0 #7a1f14,0 8px 18px rgba(0,0,0,.25);font-family:var(--display);font-weight:400;font-size:20px;border:4px solid var(--cream)}
+#acts{position:absolute;right:max(20px,env(safe-area-inset-right,0px));bottom:max(28px,env(safe-area-inset-bottom,0px));z-index:6;display:flex;gap:12px}
+.act{width:88px;height:88px;border-radius:44px;padding:0;flex-direction:column;gap:2px;color:#fff;font-family:var(--display);font-weight:400;font-size:20px;border:4px solid var(--cream)}
+#boomBtn{background:var(--splat);box-shadow:0 5px 0 #7a1f14,0 8px 18px rgba(0,0,0,.25)}
 #boomBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #7a1f14}
-#boomBtn.nudge{animation:nudge .6s ease-in-out infinite}
+#plantBtn{background:var(--leaf-deep);box-shadow:0 5px 0 var(--leaf-deep-sh),0 8px 18px rgba(0,0,0,.25)}
+#plantBtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--leaf-deep-sh)}
+.act.nudge{animation:nudge .6s ease-in-out infinite}
+#inv{position:absolute;left:8px;top:8px;display:flex;gap:6px;pointer-events:none;z-index:4}
+#inv span{display:inline-flex;align-items:center;gap:4px;background:rgba(246,240,228,.94);border-radius:14px;padding:3px 9px 3px 5px;font-family:var(--display);font-size:16px;color:var(--ink);box-shadow:0 2px 0 var(--cream-sh)}
+#inv span.honey{background:#fbe7a6}
 @keyframes nudge{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 .strip .r2 .pen{font-size:12px;color:#8a3b10}
 #wrap{position:relative;width:100%;flex:none;display:flex;align-items:flex-start;justify-content:center}
@@ -149,7 +155,7 @@ canvas{display:block;width:100%;max-width:100%;touch-action:none;background:var(
 #msg .go small{margin-left:4px}
 .confetti{position:absolute;top:-20px;pointer-events:none;animation:fall 1.2s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.6}}
-@media (prefers-reduced-motion:reduce){#boomBtn.nudge{animation:none;outline:4px solid var(--gold)}.confetti,.tapfx{display:none}.bob,.node .you,#splash .tap{animation:none}#wrap.shake{animation:none}}
+@media (prefers-reduced-motion:reduce){.act.nudge{animation:none;outline:4px solid var(--gold)}.confetti,.tapfx{display:none}.bob,.node .you,#splash .tap{animation:none}#wrap.shake{animation:none}}
 .tapfx{position:fixed;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(246,240,228,.3);display:grid;place-items:center;pointer-events:none;z-index:4;animation:tap .35s ease-out forwards}
 @keyframes tap{from{transform:scale(.6);opacity:1}to{transform:scale(1.4);opacity:0}}
 /* leaderboard */
@@ -241,9 +247,9 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
       <button class="round mute" aria-label="Sound"></button>
     </div>
   </div>
-  <div id="wrap"><canvas id="c" width="560" height="480" aria-label="Game board"></canvas></div>
+  <div id="wrap"><div id="inv"></div><canvas id="c" width="560" height="480" aria-label="Game board"></canvas></div>
   <div class="tip" id="tipCard" hidden><svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" style="flex:none"><path d="M20 12c-3-3-11-3-13 4-2 7 2 17 8 18 2 0 3-1 5-1s3 1 5 1c6-1 10-11 8-18-2-7-10-7-13-4z" fill="#e0493a"/><path d="M20 13c0-4 1-6 3-8" stroke="#6b4226" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M22 8c3-4 8-4 10-2-2 4-7 5-10 2z" fill="#4caf50"/></svg><div id="tipText"></div></div>
-    <button id="boomBtn" hidden aria-label="Set off the bombs"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="14" r="7" fill="#fff"/><path d="M14 8l2-3" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="17.5" cy="3.8" r="2" fill="#ffd34d"/></svg>Boom</button>
+    <div id="acts"><button class="act" id="plantBtn" hidden aria-label="Plant a seed"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6z" fill="#fff"/><path d="M12 15c0-3-2-5-6-5 0 3 2 5 6 5z" fill="#fff"/></svg>Plant</button><button class="act" id="boomBtn" hidden aria-label="Set off the bombs"><svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="14" r="7" fill="#fff"/><path d="M14 8l2-3" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="17.5" cy="3.8" r="2" fill="#ffd34d"/></svg>Boom</button></div>
   <div class="pad-hint" id="padHint" hidden><svg width="120" height="40" viewBox="0 0 120 40" fill="none" stroke="#f6f0e4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20h100M98 10l12 10-12 10M22 10L10 20l12 10" opacity=".85"/></svg><div>Swipe anywhere to move</div></div>
   <div id="overlay" hidden><div id="msg"></div></div>
 </section>
@@ -424,6 +430,10 @@ const SFX={
   boom(){noise(.45,.6,300);tone(120,40,.4,'sawtooth',.2);},
   die(){tone(300,80,.45,'sawtooth',.12);},
   rewind(){tone(600,220,.18,'triangle',.08);},
+  pickup(){tone(660,990,.08,'triangle',.08);tone(990,1320,.1,'triangle',.07,.08);},
+  cut(){noise(.12,.35,1800);tone(900,500,.08,'square',.05);},
+  plant(){tone(300,620,.16,'triangle',.09);tone(620,780,.1,'triangle',.06,.12);},
+  sour(){tone(520,300,.16,'square',.07);tone(300,260,.12,'square',.05,.12);},
   door(){tone(523,784,.12,'triangle',.1);tone(784,1046,.18,'triangle',.1,.12);},
   win(){[523,659,784,1046].forEach((f,i)=>tone(f,f,.14,'square',.09,i*.1));tone(1046,1318,.3,'triangle',.1,.42);},
   finale(){[523,659,784,1046,1318].forEach((f,i)=>tone(f,f,.16,'square',.09,i*.11));tone(1318,1568,.5,'triangle',.1,.6);}
@@ -436,17 +446,26 @@ document.addEventListener('pointerdown',()=>ac(),{passive:true});
 // ---------- game ----------
 const cv=$('c'),ctx=cv.getContext('2d'),CELL=40;
 let li=0,lv,st,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0,booms=[],parts=[],chomp=0,deaths=0,hintApple=null,hintDir=null,hintT=0;
-const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0],B:[0,0]}; // B = the detonator
+const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0],B:[0,0],P:[0,0]}; // B = the detonator, P = plant a seed
 function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);st=lv.start;hist=[];moves=0;pen=0;dead=false;anim=null;booms=[];parts=[];chomp=0;facing=[1,0];deaths=0;clearHint();
   cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>${L.bonus?'Bonus level':(MAPID==='big'?'Big board ':'Level ')+(i+1)+' of '+MAIN}</small>${esc(L.name)}`;$('par').textContent=L.par;
   const p=cur();$('skipBtn').hidden=!(p&&bestOf(p)[i]!=null&&i<LEVELS.length-1);
   $('overlay').hidden=true;$('tipCard').hidden=!L.tip;$('tipText').textContent=L.tip||'';show('game');refreshStats();fit();draw();
   try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
-function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;$('boomBtn').hidden=!(lv.detonator&&st.objs.some(o=>o.t==='B'));}
-function move(d){if(dead||anim||!$('overlay').hidden)return;$('padHint').hidden=true;const [dx,dy]=DIR[d];const r=stepState(lv,st,dx,dy);
+const ICON={K:'<svg width="20" height="20" viewBox="0 0 40 40"><path d="M30 6l4 0 0 4-17 17-4-4z" fill="#d3d8dd" stroke="#4a525c" stroke-width="1.5"/><path d="M9 23l8 8M12 28l-5 5" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round"/></svg>',
+  P:'<svg width="20" height="20" viewBox="0 0 40 40"><ellipse cx="20" cy="26" rx="8" ry="10" fill="#8a5a2b"/><path d="M20 16c0-6 4-9 9-9-1 5-4 8-9 9z" fill="#4caf50"/></svg>',
+  H:'<svg width="20" height="20" viewBox="0 0 40 40"><rect x="9" y="13" width="22" height="20" rx="6" fill="#e3a51f" stroke="#a8770f" stroke-width="2"/><rect x="11" y="8" width="18" height="6" rx="2" fill="#a8770f"/></svg>'};
+function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;$('boomBtn').hidden=!(lv.detonator&&st.objs.some(o=>o.t==='B'));
+  const v=st.inv||{k:0,p:0,h:0};$('plantBtn').hidden=!v.p;
+  $('inv').innerHTML=(v.k?`<span>${ICON.K}${v.k}</span>`:'')+(v.p?`<span>${ICON.P}${v.p}</span>`:'')+(v.h?`<span class="honey">${ICON.H}${v.h} left</span>`:'');}
+const PICKUP={K:'Sword! Swipe into rock to cut through it.',P:'Seed! Tap Plant to grow a block in front of your head.',H:'Honey! You stick to rock beside or above you for six moves.',G:'Golden apple! You grow by two.',Q:'Sour apple! You shrink by one.'};
+function move(d){if(dead||anim||!$('overlay').hidden)return;$('padHint').hidden=true;const [dx,dy]=DIR[d];const r=stepState(lv,st,dx,dy,d);
   if(!r){bumpT=1;SFX.bump();draw();return;}
-  if(d!=='B')facing=[dx,dy];hist.push({st,moves});const from=st;st=r.state;moves++;refreshStats();clearHint();animate(from,r);
-  if(r.ate){SFX.eat();buzz(15);chomp=1;const [ax,ay]=[from.snake[0][0]+dx,from.snake[0][1]+dy];spawnBits(ax,ay);}else if(d!=='B')SFX.step();
+  if(d!=='B'&&d!=='P')facing=[dx,dy];hist.push({st,moves});const from=st;st=r.state;moves++;refreshStats();clearHint();animate(from,r);
+  const pk=r.events.find(e=>e.type==='pickup');
+  if(r.ate){const kind=pk?pk.t:'A';kind==='Q'?SFX.sour():SFX.eat();buzz(15);chomp=1;const [ax,ay]=[from.snake[0][0]+dx,from.snake[0][1]+dy];spawnBits(ax,ay,kind);}else if(pk){SFX.pickup();buzz(10);spawnBits(pk.x,pk.y,pk.t);}else if(d!=='B'&&d!=='P')SFX.step();
+  if(pk)toast(PICKUP[pk.t],2600);
+  for(const e of r.events){if(e.type==='cut'){SFX.cut();buzz(25);spawnBits(e.x,e.y,'cut');}else if(e.type==='plant'){SFX.plant();spawnBits(e.x,e.y,'plant');}}
   if(r.events.some(e=>e.type==='push'))SFX.push();
   const dur=anim?anim.dur:0;
   if(r.events.some(e=>e.type==='explode'))setTimeout(()=>{SFX.boom();buzz(60);},Math.max(0,dur-220));
@@ -504,19 +523,19 @@ function tick(now){if(!anim)return;const p=Math.min(1,(now-anim.t0)/anim.dur);dr
 // Stage 1 (−1): the apple (or the door) the shortest solution goes for next. Stage 2 (−2 more): the move.
 let hintW=null,hintCache={},hintBusy=false;
 function hintWorker(){if(hintW)return hintW;
-  const src=[parseLevel,stateKey,isRock,stepState].map(f=>f.toString()).join('\n')+`\nconst K=(x,y)=>x+','+y;const DIRS=${JSON.stringify(DIRS)},DET=${JSON.stringify(DET)};const movesFor=lv=>lv.detonator?[...DIRS,DET]:DIRS;
+  const src=[parseLevel,stateKey,isRock,stepState,movesFor].map(f=>f.toString()).join('\n')+`\nconst K=(x,y)=>x+','+y;const DIRS=${JSON.stringify(DIRS)},DET=${JSON.stringify(DET)},PLANT=${JSON.stringify(PLANT)};
 function hintPath(lv,st,cap){const seen=new Set([stateKey(st)]);let q=[{st,path:''}];
-  const M=movesFor(lv);while(q.length){const nq=[];for(const n of q){for(const [dx,dy,c] of M){const r=stepState(lv,n.st,dx,dy);if(!r||r.dead)continue;
+  const M=movesFor(lv);while(q.length){const nq=[];for(const n of q){for(const [dx,dy,c] of M){const r=stepState(lv,n.st,dx,dy,c);if(!r||r.dead)continue;
     if(r.win)return n.path+c;const k=stateKey(r.state);if(seen.has(k))continue;seen.add(k);if(seen.size>cap)return null;nq.push({st:r.state,path:n.path+c});}}q=nq;}return null;}
 onmessage=e=>{const {id,lv,st}=e.data;lv.walls=new Set(lv.walls);lv.spikes=new Set(lv.spikes);const path=hintPath(lv,st,500000);let target=null;
-  if(path){let s=st;for(const c of path){const [dx,dy]=movesFor(lv).find(d=>d[2]===c);const r=stepState(lv,s,dx,dy);if(r.ate){target=[s.snake[0][0]+dx,s.snake[0][1]+dy];break;}s=r.state;}
+  if(path){let s=st;for(const c of path){const [dx,dy]=movesFor(lv).find(d=>d[2]===c);const r=stepState(lv,s,dx,dy,c);if(r.state.apples.length<s.apples.length){target=[s.snake[0][0]+dx,s.snake[0][1]+dy];break;}s=r.state;}
     if(!target&&lv.exit)target=lv.exit;}
   postMessage({id,path,target});};`;
   try{hintW=new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'})));
     hintW.onmessage=e=>{const {id,path,target}=e.data;hintCache[id]={dir:path?path[0]:null,target};hintBusy=false;$('hintBtn').disabled=false;applyHint(id);};
     hintW.onerror=()=>{hintW=null;hintBusy=false;$('hintBtn').disabled=false;toast('Hint is not available on this browser');};}
   catch(e){hintW=null;}return hintW;}
-function clearHint(){hintApple=null;hintDir=null;$('boomBtn').classList.remove('nudge');}
+function clearHint(){hintApple=null;hintDir=null;$('boomBtn').classList.remove('nudge');$('plantBtn').classList.remove('nudge');}
 function askHint(){if(dead||anim||!$('overlay').hidden)return;const id=stateKey(st);
   if(hintCache[id]){applyHint(id);return;}
   const w=hintWorker();
@@ -526,11 +545,13 @@ function askHint(){if(dead||anim||!$('overlay').hidden)return;const id=stateKey(
 function applyHint(id){if(stateKey(st)!==id)return;const h=hintCache[id];
   if(!h.dir){toast('No way out from here. Undo a few moves.');return;}
   if(h.target&&!hintApple&&!hintDir){hintApple=h.target;hintT=performance.now();pen+=1;refreshStats();toast(st.apples.length?'Go for the marked apple (−1). Tap Hint again for the move (−2).':'Head for the door (−1). Tap Hint again for the move (−2).',2600);draw();return;}
-  if(!hintDir){hintDir=h.dir;hintT=performance.now();pen+=h.target?2:3;refreshStats();toast(h.dir==='B'?'Try Boom':'Try '+{U:'up',D:'down',L:'left',R:'right'}[h.dir]);$('boomBtn').classList.toggle('nudge',h.dir==='B');draw();}}
+  if(!hintDir){hintDir=h.dir;hintT=performance.now();pen+=h.target?2:3;refreshStats();toast(h.dir==='B'?'Try Boom':h.dir==='P'?'Try Plant':'Try '+{U:'up',D:'down',L:'left',R:'right'}[h.dir]);$('boomBtn').classList.toggle('nudge',h.dir==='B');$('plantBtn').classList.toggle('nudge',h.dir==='P');draw();}}
 $('hintBtn').onclick=askHint;
 
-function spawnBits(cx,cy){const now=performance.now();for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,sp=60+Math.random()*120;parts.push({x:cx*CELL+CELL/2,y:cy*CELL+CELL/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-80,t0:now,life:450+Math.random()*250,c:Math.random()<.7?'#e0493a':'#fff3c4',r:2+Math.random()*3});}
-  parts.push({text:['nom','num','mmm','nom nom'][Math.floor(Math.random()*4)],x:cx*CELL+CELL/2,y:cy*CELL-6,vx:0,vy:-45,t0:now,life:700});}
+const BITS={A:['#e0493a','#fff3c4'],G:['#e3a51f','#fff4c2'],Q:['#b5d334','#f3f7c6'],K:['#d3d8dd','#ffffff'],P:['#4caf50','#8a5a2b'],H:['#e3a51f','#a8770f'],cut:['#a8977e','#6f604d'],plant:['#4caf50','#9bd77f']};
+const WORDS={A:['nom','num','mmm','nom nom'],G:['gold!','shiny!'],Q:['yuck','sour!'],K:['sword!'],P:['seed!'],H:['honey!'],cut:['chop!'],plant:['grow!']};
+function spawnBits(cx,cy,kind){kind=kind||'A';const now=performance.now(),cs=BITS[kind]||BITS.A;for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,sp=60+Math.random()*120;parts.push({x:cx*CELL+CELL/2,y:cy*CELL+CELL/2,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-80,t0:now,life:450+Math.random()*250,c:Math.random()<.7?cs[0]:cs[1],r:2+Math.random()*3});}
+  const w=WORDS[kind]||WORDS.A;parts.push({text:w[Math.floor(Math.random()*w.length)],x:cx*CELL+CELL/2,y:cy*CELL-6,vx:0,vy:-45,t0:now,life:700});}
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 // ---------- art: SVG sprites rasterised once, drawn per cell ----------
 const R=2,PAD=10; // R = backing-store scale for crisp phones; PAD = sprite overflow margin (cell units)
@@ -544,6 +565,12 @@ const SPR_SVG={
   spikes:'<rect x="1" y="33" width="38" height="7" rx="2" fill="#6e7680"/><path d="M2 34L8 14L14 34ZM14 34L20 10L26 34ZM26 34L32 14L38 34Z" fill="#d3d8dd" stroke="#4a525c" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 15L11 33M20 11L23 33M32 15L35 33" stroke="#9aa2ab" stroke-width="1.5"/>',
   doorShut:'<path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#8a5a2b"/><path d="M15.5 7.5V40M24.5 7.5V40" stroke="#6b4422" stroke-width="1.5"/><path d="M17.5 23v-2.5a2.5 2.5 0 0 1 5 0V23" stroke="#e3a51f" stroke-width="2" fill="none"/><rect x="16" y="23" width="8" height="7" rx="1.5" fill="#e3a51f"/>',
   doorOpen:'<circle cx="20" cy="24" r="22" fill="#ffe9a8" opacity="0.45"/><path d="M3 40V18a17 17 0 0 1 34 0v22z" fill="#6e736b"/><path d="M7 40V19a13 13 0 0 1 26 0v21z" fill="#fff4c2"/><path d="M10 40V22a10 10 0 0 1 20 0v18z" fill="#ffe08a"/><path d="M7 19L2 22V40H7Z" fill="#8a5a2b" stroke="#6b4422" stroke-width="1"/><path d="M20 12l1.2 3 3 1.2-3 1.2L20 20.4l-1.2-3-3-1.2 3-1.2z" fill="#ffffff"/>',
+  sword:'<path d="M30 6h4v4L16 28l-4-4z" fill="#e6eaee" stroke="#4a525c" stroke-width="1.5" stroke-linejoin="round"/><path d="M28 10L14 24" stroke="#ffffff" stroke-width="1.5" opacity=".8"/><path d="M8 22l10 10" stroke="#a8770f" stroke-width="4" stroke-linecap="round"/><path d="M12 28l-6 6" stroke="#7a4e2d" stroke-width="4.5" stroke-linecap="round"/><circle cx="5.5" cy="34.5" r="2.5" fill="#e3a51f"/>',
+  sour:'<path d="M20 12c-3-3-11-3-13 4-2 7 2 17 8 18 2 0 3-1 5-1s3 1 5 1c6-1 10-11 8-18-2-7-10-7-13-4z" fill="#b5d334" stroke="#6f8a1a" stroke-width="1.5"/><path d="M20 13c0-4 1-6 3-8" stroke="#6b4226" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M13 20l3 1M24 21l3-1" stroke="#3d4a14" stroke-width="2" stroke-linecap="round"/><path d="M15 27c2-2 4 0 5-1s3 1 5-1" stroke="#3d4a14" stroke-width="2" stroke-linecap="round" fill="none"/>',
+  seed:'<ellipse cx="20" cy="27" rx="8" ry="9" fill="#8a5a2b" stroke="#5a3a1a" stroke-width="1.5"/><path d="M15 23c2-2 4-2 6 0" stroke="#b07a4a" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M20 18v-4" stroke="#2f7d3a" stroke-width="2.5" stroke-linecap="round"/><path d="M20 14c0-5 4-8 9-8-1 5-4 8-9 8z" fill="#4caf50"/><path d="M20 15c0-4-3-6-7-6 0 4 3 6 7 6z" fill="#7cc35f"/>',
+  golden:'<path d="M20 12c-3-3-11-3-13 4-2 7 2 17 8 18 2 0 3-1 5-1s3 1 5 1c6-1 10-11 8-18-2-7-10-7-13-4z" fill="#f2c14e" stroke="#a8770f" stroke-width="1.5"/><path d="M12 18c0-3 2-5 5-5" stroke="#fff4c2" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M20 13c0-4 1-6 3-8" stroke="#6b4226" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M22 8c3-4 8-4 10-2-2 4-7 5-10 2z" fill="#4caf50"/><path d="M33 13l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z" fill="#ffffff"/>',
+  honey:'<rect x="9" y="15" width="22" height="19" rx="7" fill="#e3a51f" stroke="#a8770f" stroke-width="2"/><rect x="11" y="10" width="18" height="6" rx="2" fill="#a8770f"/><path d="M14 20c4 2 8 2 12 0" stroke="#fbe7a6" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M27 34v3" stroke="#e3a51f" stroke-width="3" stroke-linecap="round"/>',
+  sapling:'<rect x="1" y="1" width="38" height="38" rx="7" fill="#3f8f3a"/><circle cx="11" cy="11" r="8" fill="#4caf50"/><circle cx="29" cy="12" r="8" fill="#45a246"/><circle cx="12" cy="28" r="8" fill="#45a246"/><circle cx="28" cy="28" r="8" fill="#4caf50"/><circle cx="20" cy="20" r="7" fill="#7cc35f"/><path d="M8 8l3 3M30 26l2 2" stroke="#9bd77f" stroke-width="2" stroke-linecap="round"/>',
   rubble:'<rect x="3" y="30" width="12" height="8" rx="3" fill="#8f7f69"/><rect x="16" y="32" width="9" height="6" rx="2.5" fill="#a8977e"/><rect x="26" y="29" width="11" height="9" rx="3" fill="#9e8d74"/><rect x="11" y="25" width="7" height="6" rx="2" fill="#a8977e"/><path d="M4 38h32" stroke="#6f604d" stroke-width="2" stroke-linecap="round"/>',
   boom:'<path d="M20 -2l5 10 11-4-4 11 10 5-10 5 4 11-11-4-5 10-5-10-11 4 4-11-10-5 10-5-4-11 11 4z" fill="#ff8a2b"/><path d="M20 6l3 7 7-3-3 7 7 3-7 3 3 7-7-3-3 7-3-7-7 3 3-7-7-3 7-3-3-7 7 3z" fill="#ffd34d"/><circle cx="20" cy="20" r="5" fill="#fff4c2"/>'
 };
@@ -562,7 +589,7 @@ function drawSpikes(x,y){spr('spikes',x*CELL,y*CELL);}
 function drawExit(x,y,open,k){if(!open){spr('doorShut',x*CELL,y*CELL);return;}if(k<1)spr('doorShut',x*CELL,y*CELL,1,1-k);spr('doorOpen',x*CELL,y*CELL,1,k);}
 function cloud(x,y,s){ctx.fillStyle='rgba(255,255,255,.9)';ctx.beginPath();ctx.arc(x,y,9*s,0,Math.PI*2);ctx.arc(x+12*s,y-6*s,11*s,0,Math.PI*2);ctx.arc(x+26*s,y,9*s,0,Math.PI*2);ctx.rect(x,y,26*s,9*s);ctx.fill();}
 // blast preview: where a bomb that is not resting on rock would land, and the cells the blast reaches
-function blastPreview(gone){const out=[];const rock=(x,y)=>lv.walls.has(x+','+y)&&!gone.has(x+','+y);const [hx,hy]=st.snake[0];
+function blastPreview(gone){const out=[];const gr=new Set(st.grown||[]);const rock=(x,y)=>(lv.walls.has(x+','+y)&&!gone.has(x+','+y))||gr.has(x+','+y);const [hx,hy]=st.snake[0];
   const drop=(o,x,y)=>{let ly=y;while(ly+1<lv.H&&!rock(x,ly+1)&&!st.objs.some(q=>q!==o&&q.x===x&&q.y===ly+1))ly++;return ly+1>=lv.H?null:ly;};
   for(const o of st.objs){if(o.t!=='B')continue;
     if(lv.detonator){out.push({x:o.x,y:o.y});continue;} // waits for Boom
@@ -588,11 +615,13 @@ function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now()
   const gone=new Set(st.gone);
   for(const k of lv.walls){const [x,y]=k.split(',').map(Number);if(gone.has(k)){spr('rubble',x*CELL,y*CELL);continue;}
     drawRock(x,y,!(lv.walls.has(x+','+(y-1))&&!gone.has(x+','+(y-1))));}
+  for(const k of st.grown||[]){const [x,y]=k.split(',').map(Number);spr('sapling',x*CELL,y*CELL);}
   if(!anim){for(const b of blastPreview(gone)){ctx.fillStyle='rgba(224,73,58,.22)';for(const [dx,dy] of [[1,0],[-1,0],[0,-1],[0,1]]){const x=b.x+dx,y=b.y+dy;if(x<0||x>=W||y<0||y>=H||(lv.walls.has(x+','+y)&&!gone.has(x+','+y)))continue;rr(x*CELL+4,y*CELL+4,CELL-8,CELL-8,8);ctx.fill();}
     ctx.strokeStyle='rgba(224,73,58,.55)';ctx.lineWidth=2;ctx.setLineDash([4,4]);rr(b.x*CELL+3,b.y*CELL+3,CELL-6,CELL-6,8);ctx.stroke();ctx.setLineDash([]);}}
   for(const k of lv.spikes){const [x,y]=k.split(',').map(Number);if(!st.objs.some(o=>o.x===x&&o.y===y))drawSpikes(x,y);}
   if(lv.exit){const open=st.apples.length===0,k=Math.min(1,(now-doorAt)/300);if(open&&k<1)more=true;drawExit(lv.exit[0],lv.exit[1],open,k);}
   for(const [x,y] of st.apples)spr('apple',x*CELL,y*CELL);
+  for(const [x,y,t] of st.items||[])spr({K:'sword',Q:'sour',P:'seed',G:'golden',H:'honey'}[t],x*CELL,y*CELL);
   // hint stage 1: a pulsing ring round the target apple (or the door)
   if(hintApple){more=true;const q=(Math.sin((now-hintT)/180)+1)/2;ctx.strokeStyle='rgba(227,165,31,'+(.55+.45*q)+')';ctx.lineWidth=4;ctx.beginPath();ctx.arc(hintApple[0]*CELL+CELL/2,hintApple[1]*CELL+CELL/2,CELL*.5+3*q,0,Math.PI*2);ctx.stroke();
     ctx.strokeStyle='rgba(246,240,228,.9)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hintApple[0]*CELL+CELL/2,hintApple[1]*CELL+CELL/2,CELL*.5+3*q+3,0,Math.PI*2);ctx.stroke();}
@@ -607,6 +636,7 @@ function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now()
   const shake=bumpT>0?Math.sin(now/20)*3*bumpT:0;ctx.save();ctx.translate(shake,0);
   if(landT>0){const by=Math.max(...pts.map(q=>q[1]))+CELL/2,bx=pts.reduce((a,q)=>a+q[0],0)/pts.length;ctx.translate(bx,by);ctx.scale(1+.1*landT,1-.12*landT);ctx.translate(-bx,-by);}
   const line=(w,c)=>{ctx.strokeStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(pts[pts.length-1][0],pts[pts.length-1][1]);for(let i=pts.length-2;i>=0;i--)ctx.lineTo(pts[i][0],pts[i][1]);if(pts.length===1)ctx.lineTo(pts[0][0]+.01,pts[0][1]);ctx.stroke();};
+  if(st.inv&&st.inv.h>0){more=true;const q=.45+.2*Math.sin(now/160);line(43,`rgba(227,165,31,${q})`);}
   line(35,'#1d6e4a');line(29,'#2e9e6b');ctx.globalAlpha=.7;line(7,'#45b880');ctx.globalAlpha=1;
   ctx.fillStyle='#8fd9a8';for(let i=1;i<pts.length;i++){const o=i%2?[-5,-4]:[5,4];ctx.beginPath();ctx.arc(pts[i][0]+o[0],pts[i][1]+o[1],3.5,0,Math.PI*2);ctx.fill();}
   const [ex,ey]=pts[0],[fx,fy]=facing;
@@ -619,7 +649,7 @@ function draw(p=1){const W=lv.W,H=lv.H,BW=W*CELL,BH=H*CELL,now=performance.now()
   else{const off=fx!==0?[[0,-6],[0,6]]:[[-6,0],[6,0]];for(const [ox,oy] of off){ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ex+ox+fx*5,ey+oy+fy*5,5.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#213a2a';ctx.beginPath();ctx.arc(ex+ox+fx*7,ey+oy+fy*7,2.7,0,Math.PI*2);ctx.fill();}}
   ctx.restore();
   // hint stage 2: a bobbing arrow from the head in the suggested direction
-  if(hintDir&&hintDir!=='B'&&!anim){more=true;const [dx,dy]=DIR[hintDir],q=Math.sin((now-hintT)/160)*3,ax=ex+dx*(30+q),ay=ey+dy*(30+q);
+  if(hintDir&&hintDir!=='B'&&hintDir!=='P'&&!anim){more=true;const [dx,dy]=DIR[hintDir],q=Math.sin((now-hintT)/160)*3,ax=ex+dx*(30+q),ay=ey+dy*(30+q);
     ctx.save();ctx.translate(ax,ay);ctx.rotate(Math.atan2(dy,dx));ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-6,-11);ctx.lineTo(-2,0);ctx.lineTo(-6,11);ctx.closePath();
     ctx.fillStyle='#e3a51f';ctx.fill();ctx.strokeStyle='#f6f0e4';ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.stroke();ctx.restore();}
   // apple bits and nom text
@@ -652,11 +682,11 @@ const endSwipe=e=>{if(sw&&e.pointerId===sw.id)sw=null;};
 $('game').addEventListener('pointerup',endSwipe);$('game').addEventListener('pointercancel',endSwipe);
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
-addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')return;const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R',b:'B',B:'B',' ':'B'}[e.key];
-  if(m){if(m==='B'&&$('boomBtn').hidden)return;e.preventDefault();move(m);}else if(e.key==='z'||e.key==='Z')undo();else if(e.key==='r'||e.key==='R')startLevel(li);});
+addEventListener('keydown',e=>{if($('game').hidden||e.target.tagName==='INPUT')return;const m={ArrowUp:'U',ArrowDown:'D',ArrowLeft:'L',ArrowRight:'R',w:'U',s:'D',a:'L',d:'R',W:'U',S:'D',A:'L',D:'R',b:'B',B:'B',' ':'B',p:'P',P:'P'}[e.key];
+  if(m){if((m==='B'&&$('boomBtn').hidden)||(m==='P'&&$('plantBtn').hidden))return;e.preventDefault();move(m);}else if(e.key==='z'||e.key==='Z')undo();else if(e.key==='r'||e.key==='R')startLevel(li);});
 $('undo').onclick=undo;$('reset').onclick=()=>startLevel(li);$('backLv').onclick=()=>{renderLevels();show('levels');};
 $('skipBtn').onclick=()=>startLevel(li+1);
-$('boomBtn').onclick=()=>move('B');
+$('boomBtn').onclick=()=>move('B');$('plantBtn').onclick=()=>move('P');
 
 // ---------- leaderboard ----------
 let boardFrom='home',tab='overall';
