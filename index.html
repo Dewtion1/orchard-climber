@@ -91,7 +91,6 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .node:active{transform:translateY(-50%)}
 .node .disc{position:relative;width:56px;height:56px;border-radius:50%;border:4px solid #e8e2d6;background:var(--stone);color:var(--stone-ink);box-shadow:0 4px 0 var(--stone-sh);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:24px}
 .node.done .disc{background:var(--leaf-deep);color:#fff;border-color:#cfe8c4;box-shadow:0 4px 0 var(--leaf-deep-sh)}
-.node.close .disc{background:var(--leaf-deep);color:#fff;border-color:#cfe8c4;box-shadow:0 4px 0 var(--leaf-deep-sh)}
 .node.gold .disc{background:var(--gold);color:var(--ink);border-color:var(--gold-light);box-shadow:0 4px 0 var(--gold-dark)}
 .node.cur .disc{width:68px;height:68px;background:var(--cream);color:var(--ink);border:5px solid var(--gold);box-shadow:0 4px 0 var(--gold-dark);font-size:30px}
 .node:disabled{opacity:1}
@@ -100,6 +99,9 @@ input:focus-visible{outline:3px solid var(--leaf);outline-offset:1px}
 .node .you{position:absolute;left:50%;top:-34px;margin-left:-18px;width:36px;height:36px;border-radius:18px;background:var(--jade);border:3px solid var(--cream);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:15px;color:#fff;overflow:hidden;animation:bob 1.8s ease-in-out infinite}
 .node .you img{width:100%;height:100%;object-fit:cover}
 .node .cap{padding:2px 8px;border-radius:10px;font-weight:800;font-size:12px;white-space:nowrap;background:var(--cream);color:var(--ink)}
+.stars{letter-spacing:1px;color:var(--gold-dark);font-size:13px}
+.stars i{font-style:normal;opacity:.3}
+.node .cap.stars{background:var(--cream)}
 .node.gold .cap{background:var(--gold-light)}
 .node .who{font-size:11px;font-weight:800;color:#3b5a45;background:rgba(246,240,228,.75);padding:1px 6px;border-radius:8px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 #toStart{position:fixed;right:16px;bottom:max(16px,env(safe-area-inset-bottom,0px));min-height:36px;padding:0 14px;border-radius:18px;font-size:13px;z-index:3}
@@ -142,7 +144,9 @@ canvas{display:block;width:100%;max-width:100%;touch-action:none;background:var(
 #msg h2.red{color:var(--splat);font-size:48px}
 #msg .medal{position:absolute;left:50%;top:-52px;margin-left:-52px;width:104px;height:104px;border-radius:52px;background:var(--gold);border:6px solid var(--cream);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 0 var(--gold-dark)}
 #msg .medal.pale{background:#cfe8c4;box-shadow:0 5px 0 #8fb984}
-#msg .medal.close{background:var(--leaf-light);box-shadow:0 5px 0 #5f9a4a}
+#msg .medal .big{font-size:30px;letter-spacing:1px;color:#5c4307;line-height:1}
+#msg .medal .big i{font-style:normal;opacity:.3}
+#msg .stamp{position:absolute;right:-10px;top:-10px;width:44px;height:44px;border-radius:22px;background:var(--cream);box-shadow:0 3px 0 var(--cream-sh);display:flex;align-items:center;justify-content:center;transform:rotate(12deg)}
 #msg .splat{position:absolute;left:50%;top:-60px;margin-left:-75px}
 #msg .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%}
 #msg .tiles.three{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -216,6 +220,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
   <div class="stack">
     <button class="go" id="playBtn" disabled style="min-height:84px;border-radius:24px;font-size:36px;flex-direction:column;gap:2px">Play<small id="playSub">Add a player to start</small></button>
     <button class="cream" id="lbBtn" style="min-height:60px;border-radius:20px;font-family:var(--display);font-weight:400;font-size:22px;gap:10px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b07a10" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span>Family Board</span></button>
+    <button class="cream" id="valleyBtn" hidden style="min-height:56px;border-radius:20px;font-family:var(--display);font-weight:400;font-size:20px">The Valley · 100 new levels</button>
     <button class="cream" id="bigBtn" hidden style="min-height:48px">Test map: big boards and buttons</button>
   </div>
 </section>
@@ -225,7 +230,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
   <div id="lvHead">
     <button class="round cream" id="backHome" aria-label="Back to home"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#213a2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="mid"><b id="lvTitle">The Orchard</b><small id="lvSummary"></small></div>
-    <button class="chip" id="lbBtn2" aria-label="Gold apples and the board" style="border:0;cursor:pointer"><svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" fill="#e3a51f"/><path d="M20 15c-2-2-7-2-8 2-1 5 1 10 5 11 1 0 2-1 3-1s2 1 3 1c4-1 6-6 5-11-1-4-6-4-8-2z" fill="#a8770f"/></svg><span id="goldCount">0</span></button>
+    <button class="chip" id="lbBtn2" aria-label="Stars and the board" style="border:0;cursor:pointer"><span style="color:var(--gold-dark);font-size:20px;line-height:1">★</span><span id="goldCount">0</span></button>
   </div>
   <div id="path"></div>
   <button class="cream" id="toStart"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#213a2a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>Tutorials</button>
@@ -237,7 +242,7 @@ select{font-family:var(--body);font-weight:800;font-size:14px;padding:8px;border
     <div class="r1">
       <button class="round" id="backLv" aria-label="Back to levels"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#213a2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z"/></svg></button>
       <div class="name" id="gName"><small>Level 1</small>First Bites</div>
-      <div class="stats"><span>Moves<b id="moves">0</b></span><span class="par">par<b id="par">0</b></span><span>Length<b id="len">2</b></span></div>
+      <div class="stats"><span>Moves<b id="moves">0</b></span><span class="par">3★ in<b id="par">0</b></span><span>Length<b id="len">2</b></span></div>
     </div>
     <div class="r2">
       <button id="undo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#213a2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo</button>
@@ -471,14 +476,15 @@ const LEVELS_MAIN=[
 {"name":"Whole Valley 20x18","rows":["....................","....................","....................","....................","....................","..........E.........","..A....####.#.......","..........#.#.......","......A...#.#.......",".....##...#.#.......","....A..#...A........","..######............","#......#.....#......",".......#...A##......",".........#####......",".............#......",".X.oS...A.C.....XX..","####################"],"par":64},
 {"name":"Grand Orchard 20x18","rows":["....................","....................","....................","....................","....................","....................","...............A....",".A....####..........",".##.#...A...........",".#.......#..........","...E.A...#..........",".#####..............","..AA...#.#..........","#......#.#..........","..##.....#..X.......",".#.#.....#..#.......","..X#AC.So...#....XX.","####################"],"par":77},
 {"name":"Far Horizon 20x18","rows":["....................","....................",".....A..............","....................","....................","....................","A...........E.......",".....A.....##.......","..####.....A........","....#.......XX......","...#.....#####......",".......#............",".#######............",".A.....#............","##.#...#A...........","...#..####..........",".A.#..oS....C.XXX...","####################"],"par":80}
-]; // LEVELS_BIG: the separate test map of bigger boards
+],LEVELS_VALLEY=[]; // LEVELS_BIG: the test map; LEVELS_VALLEY: the 100-level review map
+const MAPS={main:{levels:LEVELS_MAIN,key:'best',title:'The Orchard',start:'Tutorials',open:false},big:{levels:LEVELS_BIG,key:'bestBig',title:'Test map',start:'Start',open:true},valley:{levels:LEVELS_VALLEY,key:'bestValley',title:'The Valley',start:'Start',open:true}};
 let LEVELS=LEVELS_MAIN,MAPID='main';
 const LEVEL_MAPS={"v5":{"0":2,"3":5,"4":10,"5":11,"8":14,"9":12,"16":18,"19":20,"20":24,"22":23,"24":25,"25":28,"26":29,"27":26,"28":31,"29":35,"30":34},"v6":{"0":0,"1":1,"2":2,"3":3,"4":4,"5":5,"6":6,"7":7,"8":8,"9":9,"10":13,"11":15,"12":18,"13":19,"14":24,"15":26,"16":29,"17":32,"18":36,"19":43,"20":45,"21":49,"22":55,"23":57,"24":67,"25":84,"26":89,"27":96,"28":103,"29":107,"30":124,"31":126,"32":127,"33":140,"34":148,"35":149}};
 const PUB=false;
 const SITE='orchard-climber.vercel.app';
 let MAIN=LEVELS.filter(l=>!l.bonus).length; // levels before the bonus; clearing the last of them is the finale
-const bestOf=p=>MAPID==='main'?(p.best||(p.best={})):(p.bestBig||(p.bestBig={})); // progress per map; only the main map reaches the leaderboard
-function setMap(id){MAPID=id;LEVELS=id==='big'?LEVELS_BIG:LEVELS_MAIN;MAIN=LEVELS.filter(l=>!l.bonus).length;$('lvTitle').textContent=id==='big'?'Test map':'The Orchard';$('toStart').lastChild.textContent=id==='big'?'Start':'Tutorials';}
+const bestOf=p=>{const k=MAPS[MAPID].key;return p[k]||(p[k]={});}; // progress per map; only the main map reaches the leaderboard
+function setMap(id){MAPID=id;const m=MAPS[id];LEVELS=m.levels;MAIN=LEVELS.filter(l=>!l.bonus).length;$('lvTitle').textContent=m.title;$('toStart').lastChild.textContent=m.start;}
 
 // ---------- persistence ----------
 const KEY='orchard.v1';
@@ -498,8 +504,14 @@ if(!S.v6){for(const p of S.players){const nb={};for(const k of Object.keys(p.bes
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const cur=()=>S.players.find(p=>p.id===S.current)||null;
 function deviceId(){try{let d=localStorage.getItem('orchard.device');if(!d){d='d'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('orchard.device',d);}return d;}catch(e){return 'danon';}}
-const tier=(best,par)=>best<=par?'gold':best<=par+5?'close':'done'; // three-tier rating
-const goldCount=p=>LEVELS.reduce((n,L,i)=>n+(bestOf(p)[i]!=null&&bestOf(p)[i]<=L.par?1:0),0);
+// stars from the move count: 3 within about a fifth of the shortest solution, 2 within about three fifths, 1 for any clear; a gold apple stamp for matching it
+const t3=par=>Math.ceil(par*1.2)+2,t2=par=>Math.ceil(par*1.6)+4;
+const stars=(best,par)=>best<=t3(par)?3:best<=t2(par)?2:1;
+const starStr=n=>'★'.repeat(n)+'<i>'+'★'.repeat(3-n)+'</i>';
+const tier=(best,par)=>best<=par?'gold':best<=par+5?'close':'done';
+const starCount=p=>LEVELS.reduce((n,L,i)=>n+(bestOf(p)[i]!=null?stars(bestOf(p)[i],L.par):0),0);
+const stampCount=p=>LEVELS.reduce((n,L,i)=>n+(bestOf(p)[i]!=null&&bestOf(p)[i]<=L.par?1:0),0);
+const goldCount=stampCount;
 const clearedCount=p=>LEVELS.reduce((n,L,i)=>n+(!L.bonus&&bestOf(p)[i]!=null?1:0),0);
 
 // ---------- shared family leaderboard (Supabase REST, same project as the other games) ----------
@@ -519,9 +531,9 @@ function lbOverall(rows){const mine=deviceId(),byP={};
   for(const r of rows){const k=r.device_id+'|'+r.pid;const o=byP[k]||(byP[k]={name:r.player,face:r.face,at:'',mine:r.device_id===mine,best:{}});
     if(r.updated_at>o.at){o.at=r.updated_at;o.name=r.player;o.face=r.face;}
     o.best[r.level]=Math.min(o.best[r.level]||1e9,r.moves);}
-  return Object.values(byP).map(o=>{const ls=Object.keys(o.best);const under=ls.filter(l=>o.best[l]<=LEVELS_MAIN[l].par).length;
-    return {...o,cleared:ls.length,total:ls.reduce((a,l)=>a+o.best[l],0),under};})
-    .sort((a,b)=>b.cleared-a.cleared||b.under-a.under||a.total-b.total);}
+  return Object.values(byP).map(o=>{const ls=Object.keys(o.best);const under=ls.filter(l=>o.best[l]<=LEVELS_MAIN[l].par).length,st=ls.reduce((a,l)=>a+stars(o.best[l],LEVELS_MAIN[l].par),0);
+    return {...o,cleared:ls.length,total:ls.reduce((a,l)=>a+o.best[l],0),under,stars:st};})
+    .sort((a,b)=>b.cleared-a.cleared||b.stars-a.stars||b.under-a.under||a.total-b.total);}
 function lbBestPerLevel(rows){const out={};for(const r of rows){const o=out[r.level];if(!o||r.moves<o.moves||(r.moves===o.moves&&r.updated_at<o.updated_at))out[r.level]={name:r.player,moves:r.moves,updated_at:r.updated_at};}return out;}
 
 // ---------- helpers ----------
@@ -581,6 +593,7 @@ $('playBtn').onclick=()=>{renderLevels();show('levels');};
 $('lbBtn').onclick=()=>openBoard();$('lbBtn2').onclick=()=>openBoard();
 $('backHome').onclick=()=>{setMap('main');renderPlayers();show('home');};
 $('bigBtn').onclick=()=>{setMap('big');renderLevels();show('levels');};$('bigBtn').hidden=!LEVELS_BIG.length;
+$('valleyBtn').onclick=()=>{setMap('valley');renderLevels();show('levels');};$('valleyBtn').hidden=!LEVELS_VALLEY.length;
 $('backHome2').onclick=()=>{show(boardFrom);if(boardFrom==='levels')renderLevels();};
 
 // ---------- levels screen: a winding path up the orchard ----------
@@ -601,14 +614,14 @@ function renderLevels(){const p=cur();if(!p)return;const path=$('path');path.inn
     <path d="M0 ${H*.45}C${W*.23} ${H*.43} ${W*.46} ${H*.44} ${W*.64} ${H*.46}S${W*.9} ${H*.48} ${W} ${H*.46}V${H}H0z" fill="var(--grass-dark)"/>
     <path d="${d}" fill="none" stroke="#b98d57" stroke-width="34" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#e2c592" stroke-width="26" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#cfad74" stroke-width="3" stroke-dasharray="2 14" stroke-linecap="round"/>${deco}</svg>`;
   const open=/^andrew$/i.test(p.name.trim())?LEVELS.length:unlockedUpTo(p);let curNode=null;
-  const openN=MAPID==='big'?LEVELS.length:open; // the test map is fully unlocked
-  LEVELS.forEach((L,i)=>{const [x,y]=pts[i];const best=bestOf(p)[i];const locked=i>openN,curr=i===(MAPID==='big'?unlockedUpTo(p):open),t=best!=null?tier(best,L.par):null;
+  const openN=MAPS[MAPID].open?LEVELS.length:open; // the test and review maps are fully unlocked
+  LEVELS.forEach((L,i)=>{const [x,y]=pts[i];const best=bestOf(p)[i];const locked=i>openN,curr=i===(MAPS[MAPID].open?unlockedUpTo(p):open),sn=best!=null?stars(best,L.par):0,t=best==null?null:sn===3?'gold':'done';
     const b=document.createElement('button');b.type='button';b.className='node'+(locked?' locked':curr?' cur':' '+t);b.disabled=locked;b.style.left=x+'px';b.style.top=y+'px';
-    let inner=`<div class="disc"><span>${i+1}</span>${locked?LOCK_SVG:''}${t==='gold'?`<span class="badge">${APPLE_SVG(22)}</span>`:t==='close'?`<span class="badge">${GREEN_APPLE_SVG(22)}</span>`:''}${curr?`<div class="you">${avatarHTML(p)}</div>`:''}</div>`;
-    const cap=locked?'':L.bonus?`Bonus · par ${L.par}`:(best!=null&&t!=='gold')?`${best} mv`:`par ${L.par}`;
-    if(cap)inner+=`<span class="cap">${cap}</span>`;inner+=`<span class="who" id="who${i}" hidden></span>`;b.innerHTML=inner;
+    let inner=`<div class="disc"><span>${i+1}</span>${locked?LOCK_SVG:''}${best!=null&&best<=L.par?`<span class="badge">${APPLE_SVG(22)}</span>`:''}${curr?`<div class="you">${avatarHTML(p)}</div>`:''}</div>`;
+    const cap=locked?'':best!=null?`<span class="cap stars">${starStr(sn)}</span>`:L.bonus?'<span class="cap">Bonus</span>':`<span class="cap">3★ in ${t3(L.par)}</span>`;
+    inner+=cap;inner+=`<span class="who" id="who${i}" hidden></span>`;b.innerHTML=inner;
     b.setAttribute('aria-label',`Level ${i+1}, ${esc(L.name)}${locked?', locked':cap?', '+cap:''}`);b.onclick=()=>startLevel(i);path.appendChild(b);if(curr)curNode=b;});
-  $('lvSummary').textContent=`${clearedCount(p)} of ${MAIN} cleared`;$('goldCount').textContent=goldCount(p);
+  $('lvSummary').textContent=`${clearedCount(p)} of ${MAIN} cleared`;$('goldCount').textContent=starCount(p);
   const sc=$('levels');requestAnimationFrame(()=>{const y=curNode?parseFloat(curNode.style.top):H;sc.scrollTop=Math.max(0,y-sc.clientHeight*.55);});
   if(MAPID==='main')lbFetch().then(rows=>{if($('levels').hidden)return;const bp=lbBestPerLevel(rows);for(const [l,o] of Object.entries(bp)){const e=$('who'+l);if(e&&!e.closest('.node').disabled){e.textContent=`Best: ${o.name} ${o.moves}`;e.hidden=false;}}}).catch(()=>{});}
 $('toStart').onclick=()=>{const sc=$('levels');sc.scrollTo({top:sc.scrollHeight,behavior:'smooth'});};
@@ -776,14 +789,15 @@ const cv=$('c'),ctx=cv.getContext('2d'),CELL=40;
 let li=0,lv,st,hist,moves,pen=0,dead=false,anim=null,facing=[1,0],bumpT=0,booms=[],parts=[],chomp=0,deaths=0,hintApple=null,hintDir=null,hintT=0;
 const DIR={U:[0,-1],D:[0,1],L:[-1,0],R:[1,0],B:[0,0],P:[0,0]}; // B = the detonator, P = plant a seed
 function startLevel(i){li=i;const L=LEVELS[i];lv=parseLevel(L);st=lv.start;hist=[];moves=0;pen=0;dead=false;anim=null;booms=[];parts=[];chomp=0;facing=[1,0];deaths=0;clearHint();
-  cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>${L.bonus?'Bonus level':(MAPID==='big'?'Big board ':'Level ')+(i+1)+' of '+MAIN}</small>${esc(L.name)}`;$('par').textContent=L.par;
+  cv.width=lv.W*CELL*R;cv.height=lv.H*CELL*R;doorAt=0;landT=0;$('gName').innerHTML=`<small>${L.bonus?'Bonus level':(MAPID==='big'?'Big board ':'Level ')+(i+1)+' of '+MAIN}</small>${esc(L.name)}`;
   const p=cur();$('skipBtn').hidden=!(p&&bestOf(p)[i]!=null&&i<LEVELS.length-1);
   $('overlay').hidden=true;$('tipCard').hidden=!L.tip;$('tipText').textContent=L.tip||'';show('game');refreshStats();fit();draw();
   try{if(!localStorage.getItem('orchard.taphint')){$('padHint').hidden=false;localStorage.setItem('orchard.taphint','1');}}catch(e){}}
 const ICON={K:'<svg width="20" height="20" viewBox="0 0 40 40"><path d="M30 6l4 0 0 4-17 17-4-4z" fill="#d3d8dd" stroke="#4a525c" stroke-width="1.5"/><path d="M9 23l8 8M12 28l-5 5" stroke="#8a5a2b" stroke-width="4" stroke-linecap="round"/></svg>',
   P:'<svg width="20" height="20" viewBox="0 0 40 40"><ellipse cx="20" cy="26" rx="8" ry="10" fill="#8a5a2b"/><path d="M20 16c0-6 4-9 9-9-1 5-4 8-9 9z" fill="#4caf50"/></svg>',
   H:'<svg width="20" height="20" viewBox="0 0 40 40"><rect x="9" y="13" width="22" height="20" rx="6" fill="#e3a51f" stroke="#a8770f" stroke-width="2"/><rect x="11" y="8" width="18" height="6" rx="2" fill="#a8770f"/></svg>'};
-function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;$('boomBtn').hidden=!(lv.detonator&&st.objs.some(o=>o.t==='B'));
+function refreshStats(){$('moves').textContent=moves+pen;$('len').textContent=st.snake.length;const L=LEVELS[li],m=moves+pen;const pc=$('par').parentNode;
+  if(m<=t3(L.par)){pc.firstChild.textContent='3★ in';$('par').textContent=t3(L.par);}else if(m<=t2(L.par)){pc.firstChild.textContent='2★ in';$('par').textContent=t2(L.par);}else{pc.firstChild.textContent='stars';$('par').textContent='★';}$('boomBtn').hidden=!(lv.detonator&&st.objs.some(o=>o.t==='B'));
   const v=st.inv||{k:0,p:0,h:0};$('plantBtn').hidden=!v.p;
   $('inv').innerHTML=(v.k?`<span>${ICON.K}${v.k}</span>`:'')+(v.p?`<span>${ICON.P}${v.p}</span>`:'')+(v.h?`<span class="honey">${ICON.H}${v.h} left</span>`:'');}
 const PICKUP={K:'Sword! Swipe into rock to cut through it.',P:'Seed! Tap Plant to grow a block in front of your head.',H:'Honey! You stick to rock beside or above you for six moves.',G:'Golden apple! You grow by two.',Q:'Sour apple! You shrink by one.'};
@@ -807,22 +821,22 @@ function move(d){if(dead||anim||!$('overlay').hidden)return;$('padHint').hidden=
   else if(st.apples.length===0&&lv.exit&&from.apples.length>0)toast('All apples eaten. Now reach the door.');}
 function levelClear(){const p=cur(),L=LEVELS[li];let note='';moves+=pen;pen=0;
   if(p){const b=bestOf(p),prev=b[li];if(prev==null||moves<prev){b[li]=moves;save();if(MAPID==='main')lbPush(p,li,moves);note=prev==null?'':`New best (was ${prev}). `;}else note=`Your best is ${prev}. `;}
-  const t=tier(moves,L.par),last=li===MAIN-1;
-  if(last&&!L.bonus&&MAPID==='main')return showFinale(p,t,note);
-  let line=t==='gold'?(moves<L.par?`${L.par-moves} under par. Gold apple, and it counts on the Family Board.`:'Matched par. Gold apple, and it counts on the Family Board.'):t==='close'?`${moves-L.par} over par. Green apple. Match par (${L.par}) for gold.`:`Cleared. Match par (${L.par}) to earn the gold apple.`;
+  const sn=stars(moves,L.par),stamp=moves<=L.par,t=stamp?'gold':sn===3?'close':'done',last=li===MAIN-1;
+  if(last&&!L.bonus&&MAPID==='main')return showFinale(p,sn,note);
+  let line=stamp?`Perfect: ${moves<L.par?'better than':'you matched'} the shortest solution. Gold apple stamp, and it counts on the Family Board.`:sn===3?`Three stars. Match the shortest solution (${L.par} moves) for the gold apple stamp.`:sn===2?`Two stars. Three needs ${t3(L.par)} moves or fewer.`:`Cleared. Two stars needs ${t2(L.par)} moves or fewer, three needs ${t3(L.par)}.`;
   if(MAPID!=='main')line=line.replace(', and it counts on the Family Board','')+' Test map: not on the board.';
   const next=li+1<LEVELS.length?li+1:null;
-  showCard('win',`<div class="medal ${t==='gold'?'':t==='close'?'close':'pale'}">${APPLE_SVG(58)}</div><h2>${t==='gold'?(moves<L.par?'Under par!':'Level clear!'):'Level clear!'}</h2>
-    <div class="tiles"><div><b>${moves}</b>moves</div><div class="par"><b>${L.par}</b>par</div></div><p>${esc(note+line)}</p>
+  showCard('win',`<div class="medal ${sn===3?'':'pale'}"><span class="big">${starStr(sn)}</span>${stamp?`<span class="stamp">${APPLE_SVG(30)}</span>`:''}</div><h2>${stamp?'Perfect!':sn===3?'Three stars!':sn===2?'Two stars':'Level clear!'}</h2>
+    <div class="tiles"><div><b>${moves}</b>moves</div><div class="par"><b>${sn}</b>star${sn>1?'s':''}</div></div><p>${esc(note+line)}</p>
     ${next!=null?`<button class="go" id="mNext">${LEVELS[next].bonus?'Bonus level':'Next level'}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`:''}
     <div class="two"><button id="mReplay">Replay</button><button id="mLevels">Levels</button></div>`);
   if(next!=null)$('mNext').onclick=()=>startLevel(next);$('mReplay').onclick=()=>startLevel(li);$('mLevels').onclick=()=>{renderLevels();show('levels');};
   confetti();}
-function showFinale(p,t,note){SFX.finale();const total=p?LEVELS.reduce((a,L,i)=>a+(!L.bonus&&bestOf(p)[i]!=null?bestOf(p)[i]:0),0):moves,gold=p?goldCount(p):0;
-  const bonus=LEVELS.findIndex(L=>L.bonus);const share=`I cleared the Orchard in Orchard Climber: ${MAIN} levels, ${gold} gold apples, ${total} moves. ${location.origin}${location.pathname}`;
+function showFinale(p,t,note){SFX.finale();const total=p?LEVELS.reduce((a,L,i)=>a+(!L.bonus&&bestOf(p)[i]!=null?bestOf(p)[i]:0),0):moves,gold=p?stampCount(p):0,sc=p?starCount(p):0;
+  const bonus=LEVELS.findIndex(L=>L.bonus);const share=`I cleared the Orchard in Orchard Climber: ${MAIN} levels, ${sc} stars, ${gold} gold apples, ${total} moves. ${location.origin}${location.pathname}`;
   showCard('win',`<div class="medal">${APPLE_SVG(58)}</div><h2>Orchard cleared!</h2>
-    <div class="tiles three"><div><b>${MAIN}</b>levels</div><div class="par"><b>${gold}</b>gold</div><div><b>${total}</b>moves</div></div>
-    <p>${esc(note)}Every apple in the orchard, eaten. ${gold===MAIN?'All gold, too. Nothing left to prove.':`${MAIN-gold} level${MAIN-gold>1?'s':''} still to match par for gold.`}</p>
+    <div class="tiles three"><div><b>${sc}</b>stars</div><div class="par"><b>${gold}</b>stamps</div><div><b>${total}</b>moves</div></div>
+    <p>${esc(note)}Every apple in the orchard, eaten. ${gold===MAIN?'Every stamp, too. Nothing left to prove.':`${MAIN-gold} stamp${MAIN-gold>1?'s':''} still to collect.`}</p>
     ${bonus>=0?`<button class="go" id="mNext">Bonus level<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>`:''}
     <div class="two"><button id="mShare">Share</button><button id="mLevels">Levels</button></div>`);
   if(bonus>=0)$('mNext').onclick=()=>startLevel(bonus);$('mLevels').onclick=()=>{renderLevels();show('levels');};
@@ -1025,10 +1039,10 @@ async function renderBoard(force){const body=$('lbBody');$('lvPick').hidden=tab!
   let rows;try{rows=await lbFetch(force);}catch(e){body.innerHTML='<p class="sub">Couldn’t reach the board. Check your connection and tap refresh.</p>';return;}
   const mine=deviceId();
   if(tab==='overall'){const ps=lbOverall(rows);if(!ps.length){body.innerHTML='<p class="sub">Nobody on the board yet. Clear a level!</p>';return;}
-    body.innerHTML='<table><tr><th></th><th>Player</th><th class="r">Cleared</th><th class="r">Gold</th><th class="r">Moves</th></tr>'+ps.map((o,i)=>`<tr class="${o.mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(o.face)?`<img class="lbav" alt="" src="${faceSrc(o.face)}">`:''}${esc(o.name)}</td><td class="r">${o.cleared}/${LEVELS_MAIN.length}</td><td class="r">${o.under}</td><td class="r">${o.total}</td></tr>`).join('')+'</table>';}
+    body.innerHTML='<table><tr><th></th><th>Player</th><th class="r">Cleared</th><th class="r">Stars</th><th class="r">Stamps</th><th class="r">Moves</th></tr>'+ps.map((o,i)=>`<tr class="${o.mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(o.face)?`<img class="lbav" alt="" src="${faceSrc(o.face)}">`:''}${esc(o.name)}</td><td class="r">${o.cleared}/${LEVELS_MAIN.length}</td><td class="r">${o.stars}</td><td class="r">${o.under}</td><td class="r">${o.total}</td></tr>`).join('')+'</table>';}
   else{const l=+$('lvSel').value||0;const rs=rows.filter(r=>r.level===l).sort((a,b)=>a.moves-b.moves||a.updated_at.localeCompare(b.updated_at));
-    if(!rs.length){body.innerHTML=`<p class="sub">No one has cleared ${esc(LEVELS_MAIN[l].name)} yet. Par is ${LEVELS_MAIN[l].par}.</p>`;return;}
-    body.innerHTML=`<p class="sub" style="margin-bottom:8px">Par ${LEVELS_MAIN[l].par}</p><table><tr><th></th><th>Player</th><th class="r">Moves</th></tr>`+rs.map((r,i)=>`<tr class="${r.device_id===mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(r.face)?`<img class="lbav" alt="" src="${faceSrc(r.face)}">`:''}${esc(r.player)}</td><td class="r">${r.moves}${r.moves<=LEVELS_MAIN[l].par?' '+APPLE_SVG(16,'style="vertical-align:-3px"'):''}</td></tr>`).join('')+'</table>';}}
+    if(!rs.length){body.innerHTML=`<p class="sub">No one has cleared ${esc(LEVELS_MAIN[l].name)} yet. Three stars in ${t3(LEVELS_MAIN[l].par)} moves.</p>`;return;}
+    body.innerHTML=`<p class="sub" style="margin-bottom:8px">Three stars in ${t3(LEVELS_MAIN[l].par)} moves, stamp for ${LEVELS_MAIN[l].par}</p><table><tr><th></th><th>Player</th><th class="r">Moves</th></tr>`+rs.map((r,i)=>`<tr class="${r.device_id===mine?'me':''}"><td class="rank">${i+1}</td><td>${faceSrc(r.face)?`<img class="lbav" alt="" src="${faceSrc(r.face)}">`:''}${esc(r.player)}</td><td class="r"><span class="stars">${starStr(stars(r.moves,LEVELS_MAIN[l].par))}</span> ${r.moves}${r.moves<=LEVELS_MAIN[l].par?' '+APPLE_SVG(16,'style="vertical-align:-3px"'):''}</td></tr>`).join('')+'</table>';}}
 
 // ---------- boot ----------
 renderPlayers();lbSyncAll();

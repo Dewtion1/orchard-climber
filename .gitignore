@@ -9,3 +9,5 @@ tools/levels-old.json
 tools/review-*.out
 tools/run3-*.log
 tools/pool3-*.json
+tools/pool4-*.json
+tools/run4-*.log

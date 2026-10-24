@@ -6,6 +6,7 @@ t=(h/'template.html').read_text()
 rules=(h/'rules.js').read_text().replace("if(typeof module!=='undefined')module.exports={parseLevel,stepState,stateKey,isRock,solve,hintMove,DIRS,DET,PLANT,movesFor};\n","")
 levels=(h/'levels50.json').read_text()
 big=(h/'levels-big.json').read_text() if (h/'levels-big.json').exists() else '[]'
+valley=(h/'levels-valley.json').read_text() if (h/'levels-valley.json').exists() else '[]'
 n=len(json.loads(levels))
 # level index maps for leaderboard rows and local progress written before the current set:
 # v5 = v4 index -> v5 index (survivors only), v6 = v5 index -> current index. Identity if a map is missing.
@@ -14,7 +15,7 @@ if (h/'level-map.json').exists():
     j=json.load(open(h/'level-map.json'))
     if 'v6' in j: maps={'v5':j.get('v5',{}),'v6':j['v6']}
     else: maps={'v5':{k:v for k,v in j.items() if not k.startswith('_')},'v6':{str(i):i for i in range(n)}}
-base=t.replace('/*RULES*/',rules).replace('/*LEVELS*/[]',levels).replace('/*LEVELSBIG*/[]',big).replace('/*LEVELMAPS*/{v5:{},v6:{}}',json.dumps(maps,separators=(',',':')))
+base=t.replace('/*RULES*/',rules).replace('/*LEVELS*/[]',levels).replace('/*LEVELSBIG*/[]',big).replace('/*LEVELSVALLEY*/[]',valley).replace('/*LEVELMAPS*/{v5:{},v6:{}}',json.dumps(maps,separators=(',',':')))
 # family
 fam=base.replace('/*FACES*/',(h/'faces.js').read_text().strip())
 (h.parent/'index.html').write_text(fam)
